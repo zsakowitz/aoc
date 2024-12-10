@@ -1,0 +1,3 @@
+.aoc/
+node_modules/
+tsconfig.tsbuildinfo

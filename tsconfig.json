@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleDetection": "force",
+    "lib": ["esnext", "esnext.iterator", "dom"],
+    "module": "esnext",
+    "skipLibCheck": true,
+    "target": "esnext",
+    "checkJs": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "go": "tsc util.ts --strict --noUncheckedIndexedAccess --moduleDetection force --lib esnext,esnext.iterator,dom --module esnext --skiplibcheck --target esnext --checkjs false"
+  },
+  "dependencies": {
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.1"
+  },
+  "prettier": {
+    "semi": false
+  },
+  "type": "module"
+}
