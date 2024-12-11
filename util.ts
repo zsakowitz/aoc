@@ -149,6 +149,10 @@ Number.prototype.nbal = function (base) {
   return o
 }
 
+Number.prototype.fnregexcapture = function (array) {
+  return array[+this]
+}
+
 String.prototype.int = function () {
   return +this
 }
@@ -276,6 +280,44 @@ String.prototype.tx = function () {
     .join("\n")
 }
 
+String.prototype.cap = function <T>(
+  this: string,
+  regex: RegExp,
+  cap?: FnRegexCapture<T>,
+): T | string[] | X {
+  if (regex.global) {
+    warn`Used a global RegExp in .cap(); switching to non-global`
+    regex = new RegExp(regex.source, regex.flags.replace("g", ""))
+  }
+  if (!cap) {
+    return (this.match(regex) ?? []).slice(1)
+  }
+  const m = regex.exec(this)
+  if (m) {
+    return cap.fnregexcapture(m)
+  } else {
+    return undefined!
+  }
+}
+
+String.prototype.caps = function <T>(
+  regex: RegExp,
+  cap?: FnRegexCapture<T>,
+): T[] | string[][] {
+  if (!regex.global) {
+    warn`Used a non-global RegExp in .caps(); switching to global`
+    regex = new RegExp(regex.source, regex.flags + "g")
+  }
+  if (!cap) {
+    return this.matchAll(regex)
+      .map((x) => x.slice(1))
+      .toArray()
+  }
+  return this.matchAll(regex)
+    .map((x) => cap.fnregexcapture(x))
+    .toArray()
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
@@ -289,6 +331,10 @@ Function.prototype.inv = function () {
   return function (...args) {
     return !self.apply(this, args)
   }
+}
+
+Function.prototype.fnregexcapture = function (arr) {
+  return this(arr)
 }
 
 RegExp.prototype.fnfilter = function (x) {
@@ -921,6 +967,9 @@ type __Point<T> = Point<T>
 type FnFilter<T, I = number> =
   | ((x: T, i: I) => boolean)
   | { fnfilter(this: any, x: T, i: I): boolean }
+type FnRegexCapture<T> =
+  | ((x: RegExpExecArray) => T)
+  | { fnregexcapture(this: any, x: RegExpExecArray): T }
 type FnAsNumberBase = { fnasnumberbase(): readonly string[] }
 type FnInt<T> = { int(): T }
 type FnStrCountTarget = { fncounttarget(source: string): number }
@@ -953,6 +1002,7 @@ declare global {
     fnasnumberbase(): string[]
     m1<T>(f: () => T): number | T
     nbal(base: FnAsNumberBase): string
+    fnregexcapture(x: RegExpExecArray): string | X
   }
 
   interface String {
@@ -978,6 +1028,10 @@ declare global {
     rev(): string
     reverse(): string
     tx(): string
+    cap(regex: RegExp): string[] | X
+    cap<T>(regex: RegExp, cap: FnRegexCapture<T>): T | X
+    caps(regex: RegExp): string[][]
+    caps<T>(regex: RegExp, cap: FnRegexCapture<T>): T[]
   }
 
   interface Function {
@@ -986,6 +1040,10 @@ declare global {
     inv<F extends (...args: any[]) => any>(
       this: F,
     ): (this: ThisParameterType<F>, ...args: Parameters<F>) => boolean
+    fnregexcapture<T extends (x: RegExpExecArray) => any>(
+      this: T,
+      x: RegExpExecArray,
+    ): T extends (...args: any[]) => infer T ? T : never
   }
 
   interface RegExp {

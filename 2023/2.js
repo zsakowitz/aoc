@@ -7,7 +7,7 @@ input(2023, 2)
     x.cap(
       /^Game (\d+): (.+)$/,
       ([, id, contents]) =>
-        contents.on`; `.none((x) =>
+        !contents.on`; `.some((x) =>
           x.on`, `.some((x) =>
             x.on` `.do(
               ([n, kind]) =>

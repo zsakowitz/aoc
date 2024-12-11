@@ -117,6 +117,9 @@ Number.prototype.nbal = function (base) {
     }
     return o;
 };
+Number.prototype.fnregexcapture = function (array) {
+    return array[+this];
+};
 String.prototype.int = function () {
     return +this;
 };
@@ -213,6 +216,36 @@ String.prototype.tx = function () {
         .map((x) => x.join(""))
         .join("\n");
 };
+String.prototype.cap = function (regex, cap) {
+    if (regex.global) {
+        warn `Used a global RegExp in .cap(); switching to non-global`;
+        regex = new RegExp(regex.source, regex.flags.replace("g", ""));
+    }
+    if (!cap) {
+        return (this.match(regex) ?? []).slice(1);
+    }
+    const m = regex.exec(this);
+    if (m) {
+        return cap.fnregexcapture(m);
+    }
+    else {
+        return undefined;
+    }
+};
+String.prototype.caps = function (regex, cap) {
+    if (!regex.global) {
+        warn `Used a non-global RegExp in .caps(); switching to global`;
+        regex = new RegExp(regex.source, regex.flags + "g");
+    }
+    if (!cap) {
+        return this.matchAll(regex)
+            .map((x) => x.slice(1))
+            .toArray();
+    }
+    return this.matchAll(regex)
+        .map((x) => cap.fnregexcapture(x))
+        .toArray();
+};
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
 };
@@ -224,6 +257,9 @@ Function.prototype.inv = function () {
     return function (...args) {
         return !self.apply(this, args);
     };
+};
+Function.prototype.fnregexcapture = function (arr) {
+    return this(arr);
 };
 RegExp.prototype.fnfilter = function (x) {
     return this.test(x);
