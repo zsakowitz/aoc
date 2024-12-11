@@ -9,7 +9,7 @@ const v =
     .k()
     .sum(
       (q) =>
-        q.diag(3, 3).join("").is("XMAS".mx()) +
+        q.diag(3, 3).join("").is("XMAS".mx()) ||
         q.diag(3, -3).join("").is("XMAS".mx()),
     ) +
   i.count("XMAS".mx()) +

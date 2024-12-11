@@ -260,6 +260,22 @@ String.prototype.mall = function (regex) {
   )
 }
 
+String.prototype.mx = function (this: string) {
+  return [this, this.reverse()]
+}
+
+String.prototype.rev = String.prototype.reverse = function () {
+  return this.chars().reverse().join("")
+}
+
+String.prototype.tx = function () {
+  return this.lines()
+    .map((x) => x.chars())
+    .tx()
+    .map((x) => x.join(""))
+    .join("\n")
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
@@ -458,6 +474,10 @@ Array.prototype.unique = function (key) {
     }
     return map.values().toArray()
   }
+}
+
+Array.prototype.fnfilter = function (...args) {
+  return this.some((f) => f.fnfilter(...args))
 }
 
 // The polyfills work equally well because of .reduce().
@@ -718,6 +738,16 @@ class Point<T = unknown> {
     readonly g: Grid<T> | undefined,
   ) {}
 
+  diag(x: number, y: number) {
+    if (!this.g) {
+      throw new Error(
+        "Cannot get points along a diagonal from a `Point` without an owner.",
+      )
+    }
+
+    return this.g.diag(this, x, y)
+  }
+
   c() {
     return new Point(this.x, this.y, this.z, this.g)
   }
@@ -812,6 +842,30 @@ globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
 
 class Grid<T> {
   constructor(readonly rows: T[][]) {}
+
+  diag(pt: Point, x: number, y: number) {
+    if (Math.abs(x) != Math.abs(y)) {
+      throw new Error("Called .diag() with values of different sizes")
+    }
+    if (!this.has(pt)) {
+      return []
+    }
+    const cells = [this.at(pt)]
+    if (x < 0) {
+      for (const v of ri(1, -x)) {
+        const o = pt.add(point(-v, v * Math.sign(y)))
+        if (this.has(o)) cells.push(this.at(o))
+        else return cells
+      }
+    } else if (x > 0) {
+      for (const v of ri(1, x)) {
+        const o = pt.add(point(v, v * Math.sign(y)))
+        if (this.has(o)) cells.push(this.at(o))
+        else return cells
+      }
+    }
+    return cells
+  }
 
   has(pt: Point) {
     return pt.i in this.rows && pt.j in this.rows[pt.i]!
@@ -920,6 +974,10 @@ declare global {
     fnasnumberbase(): string[]
     check(expected: string, confirmation: "YESIMSURE"): string
     mall(regex: RegExp): string[]
+    mx(): [normal: string, reversed: string]
+    rev(): string
+    reverse(): string
+    tx(): string
   }
 
   interface Function {
@@ -980,13 +1038,14 @@ declare global {
     all(f: FnFilter<T>): boolean
     allany(...fs: FnFilter<T>[]): boolean
     unique(key?: (x: T, i: number, a: T[]) => any): T[]
+    fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
-    sum(this: IteratorObject<number>): number
-    sum(f: (value: T, index: number, self: this) => number): number
-    prod(this: IteratorObject<number>): number
-    prod(f: (value: T, index: number, self: this) => number): number
+    sum(this: IteratorObject<number | boolean>): number
+    sum(f: (value: T, index: number, self: this) => number | boolean): number
+    prod(this: IteratorObject<number | boolean>): number
+    prod(f: (value: T, index: number, self: this) => number | boolean): number
     count(f?: FnFilter<T> | null): number
     acc<U>(f: (a: U, b: T, index: number) => U, initial: U): IteratorObject<U>
     counts(f?: FnFilter<T> | null): IteratorObject<[number, T], number, unknown>

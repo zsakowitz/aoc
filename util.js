@@ -200,6 +200,19 @@ String.prototype.mall = function (regex) {
         .map((x) => x[0])
         .toArray() || []);
 };
+String.prototype.mx = function () {
+    return [this, this.reverse()];
+};
+String.prototype.rev = String.prototype.reverse = function () {
+    return this.chars().reverse().join("");
+};
+String.prototype.tx = function () {
+    return this.lines()
+        .map((x) => x.chars())
+        .tx()
+        .map((x) => x.join(""))
+        .join("\n");
+};
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
 };
@@ -363,6 +376,9 @@ Array.prototype.unique = function (key) {
         }
         return map.values().toArray();
     }
+};
+Array.prototype.fnfilter = function (...args) {
+    return this.some((f) => f.fnfilter(...args));
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
@@ -579,6 +595,12 @@ class Point {
         this.z = z;
         this.g = g;
     }
+    diag(x, y) {
+        if (!this.g) {
+            throw new Error("Cannot get points along a diagonal from a `Point` without an owner.");
+        }
+        return this.g.diag(this, x, y);
+    }
     c() {
         return new Point(this.x, this.y, this.z, this.g);
     }
@@ -648,6 +670,34 @@ class Grid {
     rows;
     constructor(rows) {
         this.rows = rows;
+    }
+    diag(pt, x, y) {
+        if (Math.abs(x) != Math.abs(y)) {
+            throw new Error("Called .diag() with values of different sizes");
+        }
+        if (!this.has(pt)) {
+            return [];
+        }
+        const cells = [this.at(pt)];
+        if (x < 0) {
+            for (const v of ri(1, -x)) {
+                const o = pt.add(point(-v, v * Math.sign(y)));
+                if (this.has(o))
+                    cells.push(this.at(o));
+                else
+                    return cells;
+            }
+        }
+        else if (x > 0) {
+            for (const v of ri(1, x)) {
+                const o = pt.add(point(v, v * Math.sign(y)));
+                if (this.has(o))
+                    cells.push(this.at(o));
+                else
+                    return cells;
+            }
+        }
+        return cells;
     }
     has(pt) {
         return pt.i in this.rows && pt.j in this.rows[pt.i];
