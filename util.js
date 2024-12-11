@@ -1,4 +1,5 @@
 "use strict";
+const _ = [][0];
 let fs;
 let path;
 if (typeof process != "undefined") {
@@ -72,8 +73,20 @@ Number.prototype.dec = function () {
 Number.prototype.c = function () {
     return this;
 };
+Number.prototype.sd = function (other) {
+    return this - other;
+};
+Number.prototype.ud = function (other) {
+    return Math.abs(this - other);
+};
+Number.prototype.is = function (x) {
+    return x.fnfilter(this, undefined);
+};
+Number.prototype.clamp = function (min, max) {
+    return Math.max(min, Math.min(max, this));
+};
 String.prototype.int = function () {
-    return this;
+    return +this;
 };
 String.prototype.ints = function () {
     return this.match(/\d+/g)?.map((x) => +x) ?? [];
@@ -108,11 +121,20 @@ String.prototype.on = function (label) {
         : label;
     return this.split(l);
 };
+String.prototype.is = function (f) {
+    return f.fnfilter(this, undefined);
+};
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
 };
 Function.prototype.c = function () {
     return this;
+};
+Function.prototype.inv = function () {
+    const self = this;
+    return function (...args) {
+        return !self.apply(this, args);
+    };
 };
 RegExp.prototype.fnfilter = function (x) {
     return this.test(x);
@@ -128,6 +150,17 @@ Array.prototype.fncounttarget = function (source) {
 };
 Array.prototype.f = function (f) {
     return this.filter((x, i) => f.fnfilter(x, i));
+};
+Array.prototype.fi = function (f) {
+    const output = Array(this.length);
+    for (let i = 0; i < this.length; i++) {
+        if (!(i in this))
+            continue;
+        if (f.fnfilter(this[i], i)) {
+            output[i] = this[i];
+        }
+    }
+    return output;
 };
 Array.prototype.k = Array.prototype.keys;
 Array.prototype.v = Array.prototype.values;
@@ -154,7 +187,7 @@ Array.prototype.count = function (f) {
     }
     else {
         let count = 0;
-        for (const [i, v] of this) {
+        for (const [i, v] of this.entries()) {
             if (f.fnfilter(v, i)) {
                 count++;
             }
@@ -193,6 +226,39 @@ Array.prototype.c = function () {
 };
 Array.prototype.on = function (...on) {
     return this.map((x) => x.on(...on));
+};
+Array.prototype.tx = function () {
+    return Array.from({ length: this.reduce((a, b) => Math.max(a, b.length), 0) }, (_, i) => this.map((x) => x[i]));
+};
+Array.prototype.w = function (n) {
+    return Array.from({ length: Math.max(0, this.length - n) }, (_, i) => this.slice(i, i + n));
+};
+Array.prototype.sd = function () {
+    return this.w(2).map(([a, b]) => a.sd(b));
+};
+Array.prototype.ud = function () {
+    return this.w(2).map(([a, b]) => a.ud(b));
+};
+Array.prototype.s = function () {
+    return this.sort((a, b) => a - b);
+};
+Array.prototype.mid = function () {
+    if (this.length % 2 != 1) {
+        warn `Middle element of even-lengthed array does not exist.`;
+    }
+    return this[(this.length - 1) / 2];
+};
+Array.prototype.key = function (key) {
+    return this.map((x) => x[key]);
+};
+Array.prototype.wo = function (index) {
+    return this.toSpliced(index, 1);
+};
+Array.prototype.xy = function () {
+    return this.map(([x, y]) => pt(x, y));
+};
+Array.prototype.ij = function () {
+    return this.map(([i, j]) => ij(i, j));
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
@@ -248,6 +314,15 @@ Iterator.prototype.fi = function (f) {
 Iterator.prototype.by = function (other) {
     other = other.toArray();
     return this.flatMap((x) => other.map((y) => [x, y]));
+};
+Iterator.prototype.key = function (key) {
+    return this.map((x) => x[key]);
+};
+Iterator.prototype.xy = function () {
+    return this.map(([x, y]) => pt(x, y));
+};
+Iterator.prototype.ij = function () {
+    return this.map(([i, j]) => ij(i, j));
 };
 Object.prototype.do = function (f) {
     return f(this);
@@ -375,6 +450,9 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
         throw new Error("getting input failed", req.response);
     }
 };
+global.t = globalThis.tuple = function (...args) {
+    return args;
+};
 class Point {
     x;
     y;
@@ -385,6 +463,45 @@ class Point {
         this.y = y;
         this.z = z;
         this.g = g;
+    }
+    c() {
+        return new Point(this.x, this.y, this.z, this.g);
+    }
+    t() {
+        return new Point(this.x, this.y - 1, this.z, this.g);
+    }
+    l() {
+        return new Point(this.x - 1, this.y, this.z, this.g);
+    }
+    b() {
+        return new Point(this.x, this.y + 1, this.z, this.g);
+    }
+    r() {
+        return new Point(this.x + 1, this.y, this.z, this.g);
+    }
+    lt() {
+        return new Point(this.x - 1, this.y - 1, this.z, this.g);
+    }
+    rt() {
+        return new Point(this.x + 1, this.y - 1, this.z, this.g);
+    }
+    lb() {
+        return new Point(this.x - 1, this.y + 1, this.z, this.g);
+    }
+    rb() {
+        return new Point(this.x + 1, this.y + 1, this.z, this.g);
+    }
+    add(other) {
+        return new Point(this.x + other.x, this.y + other.y, this.z == null ? undefined : this.z + other.z, this.g);
+    }
+    sub(other) {
+        return new Point(this.x - other.x, this.y - other.y, this.z == null ? undefined : this.z - other.z, this.g);
+    }
+    get i() {
+        return this.y;
+    }
+    get j() {
+        return this.x;
     }
     /** Index in a grid like
      *
@@ -399,7 +516,7 @@ class Point {
         return ((this.y + this.x - 1) * (this.y + this.x - 2)) / 2 + this.x;
     }
     get v() {
-        return this.g.a[this.y][this.x];
+        return this.g.at(this);
     }
 }
 globalThis.pt =
@@ -409,17 +526,41 @@ globalThis.pt =
                 Object.assign(function pt(...args) {
                     return new Point(...args);
                 }, Point);
+globalThis.ij = Object.assign(function ij(i, j, ...args) {
+    return new Point(j, i, ...args);
+}, Point);
 class Grid {
-    a;
-    constructor(a) {
-        this.a = a;
+    rows;
+    constructor(rows) {
+        this.rows = rows;
+    }
+    row(i, start, end) {
+        if (start == null && end == null) {
+            return this.rows[i];
+        }
+        else {
+            return this.rows[i]?.slice(start, end);
+        }
+    }
+    at(pt) {
+        return this.rows[pt.y]?.[pt.x];
     }
     *k() {
-        for (let i = 0; i < this.a.length; i++) {
-            for (let j = 0; j < this.a[i].length; j++) {
+        for (let i = 0; i < this.rows.length; i++) {
+            if (!(i in this.rows))
+                continue;
+            for (let j = 0; j < this.rows[i].length; j++) {
+                if (!(j in this.rows[i]))
+                    continue;
                 yield pt(j, i, undefined, this);
             }
         }
+    }
+    flat() {
+        return this.rows.flat();
+    }
+    map(f) {
+        return new Grid(this.rows.map((row, i) => row.map((col, j) => f(col, ij(i, j, undefined, this), this))));
     }
 }
 export {};

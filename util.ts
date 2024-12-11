@@ -1,5 +1,8 @@
 "use strict"
 
+const _ = ([] as number[])[0]
+type X = Exclude<typeof _, number>
+
 let fs: typeof import("node:fs")
 let path: typeof import("node:path")
 
@@ -89,8 +92,32 @@ Number.prototype.c = function () {
   return this
 }
 
+Number.prototype.sd = function (this: number, other) {
+  return this - other
+}
+
+Number.prototype.ud = function (this: number, other) {
+  return Math.abs(this - other)
+}
+
+Number.prototype.is = function (this: number, x) {
+  return x.fnfilter(this, undefined)
+}
+
+Number.prototype.clamp = function (this: number, min, max) {
+  return Math.max(min, Math.min(max, this))
+}
+
+Number.prototype.min = function (this: number, ...args) {
+  return Math.min(this, ...args)
+}
+
+Number.prototype.max = function (this: number, ...args) {
+  return Math.max(this, ...args)
+}
+
 String.prototype.int = function () {
-  return this
+  return +this
 }
 
 String.prototype.ints = function () {
@@ -137,12 +164,23 @@ String.prototype.on = function (label) {
   return this.split(l)
 }
 
+String.prototype.is = function (this: string, f) {
+  return f.fnfilter(this, undefined)
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
 
 Function.prototype.c = function () {
   return this
+}
+
+Function.prototype.inv = function () {
+  const self = this
+  return function (...args) {
+    return !self.apply(this, args)
+  }
 }
 
 RegExp.prototype.fnfilter = function (x) {
@@ -163,6 +201,17 @@ Array.prototype.fncounttarget = function (source) {
 
 Array.prototype.f = function (f) {
   return this.filter((x, i) => f.fnfilter(x, i))
+}
+
+Array.prototype.fi = function (f) {
+  const output = Array(this.length)
+  for (let i = 0; i < this.length; i++) {
+    if (!(i in this)) continue
+    if (f.fnfilter(this[i], i)) {
+      output[i] = this[i]
+    }
+  }
+  return output
 }
 
 Array.prototype.k = Array.prototype.keys
@@ -190,7 +239,7 @@ Array.prototype.count = function (f) {
     return this.length
   } else {
     let count = 0
-    for (const [i, v] of this) {
+    for (const [i, v] of this.entries()) {
       if (f.fnfilter(v, i)) {
         count++
       }
@@ -240,6 +289,54 @@ Array.prototype.c = function () {
 
 Array.prototype.on = function (...on) {
   return this.map((x) => x.on(...on))
+}
+
+Array.prototype.tx = function () {
+  return Array.from(
+    { length: this.reduce((a, b) => Math.max(a, b.length), 0) },
+    (_, i) => this.map((x) => x[i]!),
+  )
+}
+
+Array.prototype.w = function <T>(this: T[], n: number) {
+  return Array.from({ length: Math.max(0, this.length - n) }, (_, i) =>
+    this.slice(i, i + n),
+  )
+} as any
+
+Array.prototype.sd = function () {
+  return this.w(2).map(([a, b]) => a.sd(b))
+}
+
+Array.prototype.ud = function () {
+  return this.w(2).map(([a, b]) => a.ud(b))
+}
+
+Array.prototype.s = function () {
+  return this.sort((a, b) => a - b)
+}
+
+Array.prototype.mid = function () {
+  if (this.length % 2 != 1) {
+    warn`Middle element of even-lengthed array does not exist.`
+  }
+  return this[(this.length - 1) / 2]
+}
+
+Array.prototype.key = function (key) {
+  return this.map((x) => x[key])
+}
+
+Array.prototype.wo = function (index) {
+  return this.toSpliced(index, 1)
+}
+
+Array.prototype.xy = function () {
+  return this.map(([x, y]) => pt(x, y))
+}
+
+Array.prototype.ij = function () {
+  return this.map(([i, j]) => ij(i, j))
 }
 
 // The polyfills work equally well because of .reduce().
@@ -299,6 +396,18 @@ Iterator.prototype.fi = function (f) {
 Iterator.prototype.by = function (other) {
   other = other.toArray()
   return this.flatMap((x) => other.map((y) => [x, y]))
+}
+
+Iterator.prototype.key = function (key) {
+  return this.map((x) => x[key])
+}
+
+Iterator.prototype.xy = function () {
+  return this.map(([x, y]) => pt(x, y))
+}
+
+Iterator.prototype.ij = function () {
+  return this.map(([i, j]) => ij(i, j))
 }
 
 Object.prototype.do = function (f) {
@@ -464,13 +573,79 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
   }
 }
 
+global.t = globalThis.tuple = function (...args) {
+  return args
+}
+
 class Point<T = unknown> {
   constructor(
     readonly x: number,
     readonly y: number,
-    readonly z?: number | undefined,
-    readonly g?: Grid<T>,
+    readonly z: number | undefined,
+    readonly g: Grid<T> | undefined,
   ) {}
+
+  c() {
+    return new Point(this.x, this.y, this.z, this.g)
+  }
+
+  t() {
+    return new Point(this.x, this.y - 1, this.z, this.g)
+  }
+
+  l() {
+    return new Point(this.x - 1, this.y, this.z, this.g)
+  }
+
+  b() {
+    return new Point(this.x, this.y + 1, this.z, this.g)
+  }
+
+  r() {
+    return new Point(this.x + 1, this.y, this.z, this.g)
+  }
+
+  lt() {
+    return new Point(this.x - 1, this.y - 1, this.z, this.g)
+  }
+
+  rt() {
+    return new Point(this.x + 1, this.y - 1, this.z, this.g)
+  }
+
+  lb() {
+    return new Point(this.x - 1, this.y + 1, this.z, this.g)
+  }
+
+  rb() {
+    return new Point(this.x + 1, this.y + 1, this.z, this.g)
+  }
+
+  add(other: Point) {
+    return new Point(
+      this.x + other.x,
+      this.y + other.y,
+      this.z == null ? undefined : this.z + other.z!,
+      this.g,
+    )
+  }
+
+  sub(other: Point) {
+    return new Point(
+      this.x - other.x,
+      this.y - other.y,
+      this.z == null ? undefined : this.z - other.z!,
+      this.g,
+    )
+  }
+
+  get i() {
+    return this.y
+  }
+
+  get j() {
+    return this.x
+  }
 
   /** Index in a grid like
    *
@@ -485,8 +660,8 @@ class Point<T = unknown> {
     return ((this.y + this.x - 1) * (this.y + this.x - 2)) / 2 + this.x
   }
 
-  get v() {
-    return this.g!.a[this.y]![this.x]!
+  get v(): T | X {
+    return this.g!.at(this)
   }
 }
 
@@ -495,31 +670,71 @@ globalThis.pt =
   globalThis.point =
   globalThis.Point =
     Object.assign(function pt(...args: any[]) {
-      return new Point(...(args as ConstructorParameters<typeof Point>))
+      return new (Point as any)(...args)
     }, Point) as any
 
+globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
+  return new (Point as any)(j, i, ...args)
+}, Point) as any
+
 class Grid<T> {
-  constructor(readonly a: T[][]) {}
+  constructor(readonly rows: T[][]) {}
+
+  tx(): Grid<T> {
+    return new Grid(this.rows.tx())
+  }
+
+  row(i: number, start?: number, end?: number): T[] | X {
+    if (start == null && end == null) {
+      return this.rows[i]!
+    } else {
+      return this.rows[i]!?.slice(start, end)
+    }
+  }
+
+  at(pt: Point): T | X {
+    return this.rows[pt.y]?.[pt.x]!
+  }
 
   *k(): IteratorObject<Point<T>, undefined> {
-    for (let i = 0; i < this.a.length; i++) {
-      for (let j = 0; j < this.a[i]!.length; j++) {
+    for (let i = 0; i < this.rows.length; i++) {
+      if (!(i in this.rows)) continue
+      for (let j = 0; j < this.rows[i]!.length; j++) {
+        if (!(j in this.rows[i]!)) continue
         yield pt(j, i, undefined, this)
       }
     }
   }
+
+  flat(): T[] {
+    return this.rows.flat()
+  }
+
+  map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U> {
+    return new Grid(
+      this.rows.map((row, i) =>
+        row.map((col, j) => f(col, ij(i, j, undefined, this), this)),
+      ),
+    )
+  }
 }
 
 declare var __Point: typeof Point
+type __Point<T> = Point<T>
 
-type FnFilter<T> =
-  | ((x: T, i: number) => boolean)
-  | { fnfilter(this: any, x: T, i: number): boolean }
+type FnFilter<T, I = number> =
+  | ((x: T, i: I) => boolean)
+  | { fnfilter(this: any, x: T, i: I): boolean }
 type FnInt<T> = { int(): T }
 type FnStrCountTarget = { fncounttarget(source: string): number }
 type FnSws<T> = { sws(): T }
 type FnOn<T> = { on(source: string | TemplateStringsArray): T[] }
-
+interface FnSd {
+  sd(other: this): this
+}
+interface FnUd {
+  ud(other: this): this
+}
 interface FnCopy {
   c(): this
 }
@@ -532,10 +747,16 @@ declare global {
     inc(): number
     dec(): number
     c(): this
+    sd(other: number): number
+    ud(other: number): number
+    is(x: FnFilter<number, undefined>): boolean
+    clamp(min: number, max: number): number
+    min(...others: number[]): number
+    max(...others: number[]): number
   }
 
   interface String {
-    int(): this
+    int(): number
     ints(): number[]
     fnfilter(x: string): boolean
     count(f: FnStrCountTarget): number
@@ -546,11 +767,15 @@ declare global {
     sws(): string[]
     c(): this
     on(label: string | TemplateStringsArray): string[]
+    is(x: FnFilter<string, undefined>): boolean
   }
 
   interface Function {
-    fnfilter<T>(this: (x: T, i: number) => boolean, x: T, i: number): boolean
+    fnfilter<T, I>(this: (x: T, i: I) => boolean, x: T, i: I): boolean
     c(): this
+    inv<F extends (...args: any[]) => any>(
+      this: F,
+    ): (this: ThisParameterType<F>, ...args: Parameters<F>) => boolean
   }
 
   interface RegExp {
@@ -562,11 +787,12 @@ declare global {
   interface Array<T> {
     fncounttarget(source: string): number
     f(f: FnFilter<T>): T[]
+    fi(f: FnFilter<T>): T[]
     k(): IteratorObject<number>
     v(): IteratorObject<T>
     i(v: T): number
-    int<U>(this: Array<FnInt<U>>): U[]
-    get last(): T | undefined
+    int(this: FnInt<any>[]): (T extends FnInt<infer U> ? U : never)[]
+    get last(): T | X
     set last(v: T)
     count(f?: FnFilter<T> | null): number
     sum(this: number[]): number
@@ -574,10 +800,30 @@ declare global {
     prod(this: number[]): number
     prod(f: (value: T, index: number, self: this) => number): number
     by<U>(other: IteratorObject<U> | U[]): [T, U][]
-    toArray(): this
-    sws<T>(this: FnSws<T>[]): T[]
-    c(this: FnCopy[]): this
-    on<T>(this: FnOn<T>[], on: string | TemplateStringsArray): T[][]
+    toArray(): T[]
+    sws(this: FnSws<any>[]): (T extends FnSws<infer U> ? U : never)[]
+    c(this: FnCopy[]): T[]
+    on(
+      this: FnOn<any>[],
+      on: string | TemplateStringsArray,
+    ): (T extends FnOn<infer U> ? U : never)[][]
+    tx<T>(this: T[][]): T[][]
+    w(n: 1): [T][]
+    w(n: 2): [T, T][]
+    w(n: 3): [T, T, T][]
+    w(n: number): T[][]
+    sd(this: FnSd[]): T[]
+    ud(this: FnUd[]): T[]
+    s(this: number[]): number[]
+    mid(): T | X
+    key<K extends keyof T>(key: K): T[K][]
+    wo(index: number): T[]
+    xy(
+      this: IteratorObject<[x: number, y: number], any, any>,
+    ): IteratorObject<Point, any, any>
+    ij(
+      this: IteratorObject<[i: number, j: number], any, any>,
+    ): IteratorObject<Point, any, any>
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
@@ -590,6 +836,13 @@ declare global {
     counts(f?: FnFilter<T> | null): IteratorObject<[number, T], number, unknown>
     fi(f: FnFilter<T>): number
     by<U>(other: IteratorObject<U> | U[]): IteratorObject<[T, U]>
+    key<K extends keyof T>(key: K): IteratorObject<T[K], undefined, unknown>
+    xy(
+      this: IteratorObject<[x: number, y: number], any, any>,
+    ): IteratorObject<Point, any, any>
+    ij(
+      this: IteratorObject<[i: number, j: number], any, any>,
+    ): IteratorObject<Point, any, any>
   }
 
   interface Object {
@@ -603,6 +856,8 @@ declare global {
   function today(): [year: number, date: number]
   function checkInput(year: number, date: number): Promise<void>
   function input(year: number, date: number): string
+  function t<T extends any[]>(...args: T): T
+  function tuple<T extends any[]>(...args: T): T
 
   var Point: typeof __Point & {
     <T>(x: number, y: number, z?: number | undefined, g?: Grid<T>): Point<T>
@@ -610,6 +865,8 @@ declare global {
   var point: typeof Point
   var pt: typeof Point
   var p: typeof Point
+  var ij: typeof Point
+  type Point<T = unknown> = __Point<T>
 }
 
 // sbyRawUnsafe sby sum prod tx num bigint nums ints uints digits digitnamesfwd digitnamesrev sws s filterByFnRaw count w ud sd abs ispos isneg everyAny everyany everyFn someFn none wo indexes idxs all any check counttarget gcd lcm by toArray rbr grid stringis asnumberbase on fm xon noempty i reject mid wi ins k perms u uniq unique fncopy r rf
