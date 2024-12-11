@@ -246,6 +246,34 @@ String.prototype.caps = function (regex, cap) {
         .map((x) => cap.fnregexcapture(x))
         .toArray();
 };
+String.prototype.digitname = function () {
+    return [
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+    ].indexOf(this);
+};
+String.prototype.digits = function () {
+    return this.mall(/\d/g).map((x) => +x);
+};
+String.prototype.digitnamesfwd = function () {
+    return this.mall(/\d|one|two|three|four|five|six|seven|eight|nine/g).map((x) => x.digitname().m1(() => +x));
+};
+String.prototype.digitnamesrev = function () {
+    return this.reverse()
+        .mall(/\d|enin|thgie|neves|xis|evif|ruof|eerht|owt|eno/g)
+        .map((x) => x
+        .reverse()
+        .digitname()
+        .m1(() => +x));
+};
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
 };

@@ -318,6 +318,42 @@ String.prototype.caps = function <T>(
     .toArray()
 }
 
+String.prototype.digitname = function (this: string) {
+  return [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+  ].indexOf(this)
+}
+
+String.prototype.digits = function (this: string) {
+  return this.mall(/\d/g).map((x) => +x)
+}
+
+String.prototype.digitnamesfwd = function (this: string) {
+  return this.mall(/\d|one|two|three|four|five|six|seven|eight|nine/g).map(
+    (x) => x.digitname().m1(() => +x),
+  )
+}
+
+String.prototype.digitnamesrev = function (this: string) {
+  return this.reverse()
+    .mall(/\d|enin|thgie|neves|xis|evif|ruof|eerht|owt|eno/g)
+    .map((x) =>
+      x
+        .reverse()
+        .digitname()
+        .m1(() => +x),
+    )
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
@@ -1032,6 +1068,10 @@ declare global {
     cap<T>(regex: RegExp, cap: FnRegexCapture<T>): T | X
     caps(regex: RegExp): string[][]
     caps<T>(regex: RegExp, cap: FnRegexCapture<T>): T[]
+    digitname(): number
+    digits(): number[]
+    digitnamesfwd(): number[]
+    digitnamesrev(): number[]
   }
 
   interface Function {

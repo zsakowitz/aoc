@@ -128,6 +128,10 @@ declare global {
         cap<T>(regex: RegExp, cap: FnRegexCapture<T>): T | X;
         caps(regex: RegExp): string[][];
         caps<T>(regex: RegExp, cap: FnRegexCapture<T>): T[];
+        digitname(): number;
+        digits(): number[];
+        digitnamesfwd(): number[];
+        digitnamesrev(): number[];
     }
     interface Function {
         fnfilter<T, I>(this: (x: T, i: I) => boolean, x: T, i: I): boolean;

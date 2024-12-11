@@ -245,7 +245,7 @@ function load() {
     return this.chars().reverse().join("")
   }
 
-  String.prototype.digit = function () {
+  String.prototype.digitname = function () {
     return [
       Symbol(),
       "one",
