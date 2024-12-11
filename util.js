@@ -195,6 +195,11 @@ String.prototype.check = function (expected, confirmation) {
     }
     return this;
 };
+String.prototype.mall = function (regex) {
+    return (this.matchAll(regex)
+        .map((x) => x[0])
+        .toArray() || []);
+};
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
 };
@@ -343,6 +348,21 @@ Array.prototype.all = function (f) {
 };
 Array.prototype.allany = function (...fs) {
     return fs.some((f) => this.all(f));
+};
+Array.prototype.unique = function (key) {
+    if (key == null) {
+        return this.filter((x, i, a) => a.indexOf(x) == i);
+    }
+    else {
+        const map = new Map();
+        for (let i = 0; i < this.length; i++) {
+            const k = key(this[i], i, this);
+            if (map.has(k))
+                continue;
+            map.set(k, this[i]);
+        }
+        return map.values().toArray();
+    }
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
@@ -628,6 +648,9 @@ class Grid {
     rows;
     constructor(rows) {
         this.rows = rows;
+    }
+    has(pt) {
+        return pt.i in this.rows && pt.j in this.rows[pt.i];
     }
     int() {
         return new Grid(this.rows.int());

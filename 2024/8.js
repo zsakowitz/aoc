@@ -1,12 +1,12 @@
 import "../util.js"
 
-function go(input, part) {
+function go(/** @type {string} */ input, /** @type {1|2} */ part) {
   // same on both
   const g = input.grid()
-  const output = g.map((r) => r.map((x) => 0))
+  const output = g.rows.map((r) => r.map((x) => 0))
   const chars = input
     .trim()
-    .match(/[^.\s]/g)
+    .mall(/[^.\s]/g)
     .unique()
   for (const char of chars) {
     const poss = g

@@ -252,6 +252,14 @@ String.prototype.check = function (this: string, expected, confirmation) {
   return this
 }
 
+String.prototype.mall = function (regex) {
+  return (
+    this.matchAll(regex)
+      .map((x) => x[0])
+      .toArray() || []
+  )
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
@@ -436,6 +444,20 @@ Array.prototype.all = function (f) {
 
 Array.prototype.allany = function (...fs) {
   return fs.some((f) => this.all(f))
+}
+
+Array.prototype.unique = function (key) {
+  if (key == null) {
+    return this.filter((x, i, a) => a.indexOf(x) == i)
+  } else {
+    const map = new Map()
+    for (let i = 0; i < this.length; i++) {
+      const k = key(this[i]!, i, this)
+      if (map.has(k)) continue
+      map.set(k, this[i]!)
+    }
+    return map.values().toArray()
+  }
 }
 
 // The polyfills work equally well because of .reduce().
@@ -791,6 +813,10 @@ globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
 class Grid<T> {
   constructor(readonly rows: T[][]) {}
 
+  has(pt: Point) {
+    return pt.i in this.rows && pt.j in this.rows[pt.i]!
+  }
+
   int<U>(this: Grid<FnInt<U>>): Grid<T extends FnInt<infer U> ? U : never>
   int<U>(this: Grid<FnInt<U>>): Grid<U> {
     return new Grid(this.rows.int())
@@ -893,6 +919,7 @@ declare global {
     nb(digits: FnAsNumberBase, offset: number): number
     fnasnumberbase(): string[]
     check(expected: string, confirmation: "YESIMSURE"): string
+    mall(regex: RegExp): string[]
   }
 
   interface Function {
@@ -952,6 +979,7 @@ declare global {
     ): IteratorObject<Point, any, any>
     all(f: FnFilter<T>): boolean
     allany(...fs: FnFilter<T>[]): boolean
+    unique(key?: (x: T, i: number, a: T[]) => any): T[]
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
