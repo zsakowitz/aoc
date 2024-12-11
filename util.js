@@ -91,6 +91,32 @@ Number.prototype.min = function (...args) {
 Number.prototype.max = function (...args) {
     return Math.max(this, ...args);
 };
+Number.prototype.fnasnumberbase = function () {
+    return rx(+this)
+        .map((x) => "" + x)
+        .toArray();
+};
+Number.prototype.m1 = function (f) {
+    if (this == -1)
+        return f();
+    return this;
+};
+Number.prototype.nbal = function (base) {
+    const digits = base.fnasnumberbase();
+    if (!Number.isSafeInteger(digits.length) || !(digits.length % 2)) {
+        warn `.nbal() expects an odd numbered base; operation may fail.`;
+    }
+    const offset = (1 - digits.length) / 2;
+    let o = "";
+    let n = +this;
+    while (n != 0) {
+        const m5 = Math.round(n / digits.length) * digits.length;
+        const diff = n - m5;
+        o = digits[diff - offset] + o;
+        n = m5 / digits.length;
+    }
+    return o;
+};
 String.prototype.int = function () {
     return +this;
 };
@@ -138,6 +164,36 @@ String.prototype.xmid = function () {
         warn `Splitting an odd-length string in half.`;
     }
     return this.xat(this.length / 2);
+};
+String.prototype.nb = function (base, offset) {
+    if (offset === undefined) {
+        warn `No offset passed; implicitly using offset zero.`;
+        offset = 0;
+    }
+    const digits = base.fnasnumberbase();
+    return this.chars()
+        .map((char) => digits.indexOf(char).m1(() => {
+        warn `Digit not listed in digits list when converting number in .nb(); skipping.`;
+        return false;
+    }))
+        .filter((x) => x !== false)
+        .map((x) => x + offset)
+        .reduce((a, b) => digits.length * a + b, 0);
+};
+String.prototype.fnasnumberbase = function () {
+    return this.chars();
+};
+String.prototype.check = function (expected, confirmation) {
+    if (confirmation !== "YESIMSURE") {
+        warn `Calling .check() on a string; pass "YESIMSURE" as 2nd arg to disable warning.`;
+    }
+    if (this !== expected) {
+        throw new Error(`${colors.red}FAILED: expected ${expected} but got ${this}${colors.reset}`);
+    }
+    else {
+        console.log(`${colors.green}PASSED: ${expected}${colors.reset}`);
+    }
+    return this;
 };
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
@@ -357,6 +413,17 @@ Object.prototype.do = function (f) {
 };
 Object.prototype.r = function (n) {
     return Array.from({ length: n }, () => this.c());
+};
+Boolean.prototype.c = function () {
+    return Boolean(this);
+};
+Boolean.prototype.s = function () {
+    if (this) {
+        return -1;
+    }
+    else {
+        return 1;
+    }
 };
 function rangeTo(a, b) {
     if (b < a) {

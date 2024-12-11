@@ -116,6 +116,39 @@ Number.prototype.max = function (this: number, ...args) {
   return Math.max(this, ...args)
 }
 
+Number.prototype.fnasnumberbase = function () {
+  return rx(+this)
+    .map((x) => "" + x)
+    .toArray()
+}
+
+Number.prototype.m1 = function (this: number, f) {
+  if (this == -1) return f()
+  return this
+}
+
+Number.prototype.nbal = function (base) {
+  const digits = base.fnasnumberbase()
+
+  if (!Number.isSafeInteger(digits.length) || !(digits.length % 2)) {
+    warn`.nbal() expects an odd numbered base; operation may fail.`
+  }
+
+  const offset = (1 - digits.length) / 2
+
+  let o = ""
+  let n = +this
+
+  while (n != 0) {
+    const m5 = Math.round(n / digits.length) * digits.length
+    const diff = n - m5
+    o = digits[diff - offset] + o
+    n = m5 / digits.length
+  }
+
+  return o
+}
+
 String.prototype.int = function () {
   return +this
 }
@@ -177,6 +210,46 @@ String.prototype.xmid = function (this: string) {
     warn`Splitting an odd-length string in half.`
   }
   return this.xat(this.length / 2)
+}
+
+String.prototype.nb = function (base, offset) {
+  if (offset === undefined) {
+    warn`No offset passed; implicitly using offset zero.`
+    offset = 0
+  }
+
+  const digits = base.fnasnumberbase()
+
+  return this.chars()
+    .map((char) =>
+      digits.indexOf(char).m1<false>(() => {
+        warn`Digit not listed in digits list when converting number in .nb(); skipping.`
+        return false
+      }),
+    )
+    .filter((x) => x !== false)
+    .map((x) => x + offset)
+    .reduce((a, b) => digits.length * a + b, 0)
+}
+
+String.prototype.fnasnumberbase = function () {
+  return this.chars()
+}
+
+String.prototype.check = function (this: string, expected, confirmation) {
+  if (confirmation !== "YESIMSURE") {
+    warn`Calling .check() on a string; pass "YESIMSURE" as 2nd arg to disable warning.`
+  }
+
+  if (this !== expected) {
+    throw new Error(
+      `${colors.red}FAILED: expected ${expected} but got ${this}${colors.reset}`,
+    )
+  } else {
+    console.log(`${colors.green}PASSED: ${expected}${colors.reset}`)
+  }
+
+  return this
 }
 
 Function.prototype.fnfilter = function (x, i) {
@@ -442,6 +515,18 @@ Object.prototype.do = function (f) {
 
 Object.prototype.r = function (n) {
   return Array.from({ length: n }, () => this.c())
+}
+
+Boolean.prototype.c = function () {
+  return Boolean(this)
+}
+
+Boolean.prototype.s = function () {
+  if (this) {
+    return -1
+  } else {
+    return 1
+  }
 }
 
 function rangeTo(a: number, b: number) {
@@ -756,6 +841,7 @@ type __Point<T> = Point<T>
 type FnFilter<T, I = number> =
   | ((x: T, i: I) => boolean)
   | { fnfilter(this: any, x: T, i: I): boolean }
+type FnAsNumberBase = { fnasnumberbase(): readonly string[] }
 type FnInt<T> = { int(): T }
 type FnStrCountTarget = { fncounttarget(source: string): number }
 type FnSws<T> = { sws(): T }
@@ -784,6 +870,9 @@ declare global {
     clamp(min: number, max: number): number
     min(...others: number[]): number
     max(...others: number[]): number
+    fnasnumberbase(): string[]
+    m1<T>(f: () => T): number | T
+    nbal(base: FnAsNumberBase): string
   }
 
   interface String {
@@ -801,6 +890,9 @@ declare global {
     is(x: FnFilter<string, undefined>): boolean
     xat(i: number): [string, string]
     xmid(): [string, string]
+    nb(digits: FnAsNumberBase, offset: number): number
+    fnasnumberbase(): string[]
+    check(expected: string, confirmation: "YESIMSURE"): string
   }
 
   interface Function {
@@ -883,7 +975,12 @@ declare global {
 
   interface Object {
     do<T, U>(this: T, f: (x: T) => U): U
-    r<T extends FnCopy>(this: T, n: number): T[]
+    r(this: FnCopy, n: number): this[]
+  }
+
+  interface Boolean {
+    c(): boolean
+    s(): -1 | 1
   }
 
   function ri(min: number, max?: number): Range
