@@ -85,6 +85,12 @@ Number.prototype.is = function (x) {
 Number.prototype.clamp = function (min, max) {
     return Math.max(min, Math.min(max, this));
 };
+Number.prototype.min = function (...args) {
+    return Math.min(this, ...args);
+};
+Number.prototype.max = function (...args) {
+    return Math.max(this, ...args);
+};
 String.prototype.int = function () {
     return +this;
 };
@@ -123,6 +129,15 @@ String.prototype.on = function (label) {
 };
 String.prototype.is = function (f) {
     return f.fnfilter(this, undefined);
+};
+String.prototype.xat = function (idx) {
+    return [this.slice(0, idx), this.slice(idx)];
+};
+String.prototype.xmid = function () {
+    if (this.length % 2 != 0) {
+        warn `Splitting an odd-length string in half.`;
+    }
+    return this.xat(this.length / 2);
 };
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
@@ -231,7 +246,7 @@ Array.prototype.tx = function () {
     return Array.from({ length: this.reduce((a, b) => Math.max(a, b.length), 0) }, (_, i) => this.map((x) => x[i]));
 };
 Array.prototype.w = function (n) {
-    return Array.from({ length: Math.max(0, this.length - n) }, (_, i) => this.slice(i, i + n));
+    return Array.from({ length: Math.max(0, this.length - n + 1) }, (_, i) => this.slice(i, i + n));
 };
 Array.prototype.sd = function () {
     return this.w(2).map(([a, b]) => a.sd(b));
@@ -254,11 +269,24 @@ Array.prototype.key = function (key) {
 Array.prototype.wo = function (index) {
     return this.toSpliced(index, 1);
 };
+Array.prototype.woall = function* () {
+    for (let i = 0; i < this.length; i++) {
+        if (!(i in this))
+            continue;
+        yield this.wo(i);
+    }
+};
 Array.prototype.xy = function () {
     return this.map(([x, y]) => pt(x, y));
 };
 Array.prototype.ij = function () {
     return this.map(([i, j]) => ij(i, j));
+};
+Array.prototype.all = function (f) {
+    return this.every((x, i, a) => f.fnfilter(x, i));
+};
+Array.prototype.allany = function (...fs) {
+    return fs.some((f) => this.all(f));
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
@@ -533,6 +561,12 @@ class Grid {
     rows;
     constructor(rows) {
         this.rows = rows;
+    }
+    int() {
+        return new Grid(this.rows.int());
+    }
+    tx() {
+        return new Grid(this.rows.tx());
     }
     row(i, start, end) {
         if (start == null && end == null) {

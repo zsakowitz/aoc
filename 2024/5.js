@@ -26,6 +26,6 @@ sheets
 
 sheets
   .filter(ok.inv())
-  .map((x) => x.sby((a, b) => afters[a].includes(b).s()))
+  .map((x) => x.sort((a, b) => afters[a].includes(b).s()))
   .sum((x) => x.mid())
   .check(4145)

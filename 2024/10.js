@@ -9,6 +9,7 @@ import "../util.js"
 10456732`
   .trim()
   .grid()
+  .int()
   .k()
   .filter((p) => +p.v == 0)
   .sum((k) => {
@@ -21,7 +22,7 @@ import "../util.js"
           p.l().v == n && p.l(),
           p.r().v == n && p.r(),
         ])
-        .filter((x) => x)
+        .filter((x) => x !== false)
         .filter((x, i, a) => a.findIndex((y) => y.x == x.x && y.y == x.y) == i)
     }
     return p.length

@@ -168,6 +168,17 @@ String.prototype.is = function (this: string, f) {
   return f.fnfilter(this, undefined)
 }
 
+String.prototype.xat = function (idx) {
+  return [this.slice(0, idx), this.slice(idx)]
+}
+
+String.prototype.xmid = function (this: string) {
+  if (this.length % 2 != 0) {
+    warn`Splitting an odd-length string in half.`
+  }
+  return this.xat(this.length / 2)
+}
+
 Function.prototype.fnfilter = function (x, i) {
   return this(x, i)
 }
@@ -299,7 +310,7 @@ Array.prototype.tx = function () {
 }
 
 Array.prototype.w = function <T>(this: T[], n: number) {
-  return Array.from({ length: Math.max(0, this.length - n) }, (_, i) =>
+  return Array.from({ length: Math.max(0, this.length - n + 1) }, (_, i) =>
     this.slice(i, i + n),
   )
 } as any
@@ -331,12 +342,27 @@ Array.prototype.wo = function (index) {
   return this.toSpliced(index, 1)
 }
 
+Array.prototype.woall = function* () {
+  for (let i = 0; i < this.length; i++) {
+    if (!(i in this)) continue
+    yield this.wo(i)
+  }
+}
+
 Array.prototype.xy = function () {
   return this.map(([x, y]) => pt(x, y))
 }
 
 Array.prototype.ij = function () {
   return this.map(([i, j]) => ij(i, j))
+}
+
+Array.prototype.all = function (f) {
+  return this.every((x, i, a) => f.fnfilter(x, i))
+}
+
+Array.prototype.allany = function (...fs) {
+  return fs.some((f) => this.all(f))
 }
 
 // The polyfills work equally well because of .reduce().
@@ -680,6 +706,11 @@ globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
 class Grid<T> {
   constructor(readonly rows: T[][]) {}
 
+  int<U>(this: Grid<FnInt<U>>): Grid<T extends FnInt<infer U> ? U : never>
+  int<U>(this: Grid<FnInt<U>>): Grid<U> {
+    return new Grid(this.rows.int())
+  }
+
   tx(): Grid<T> {
     return new Grid(this.rows.tx())
   }
@@ -768,6 +799,8 @@ declare global {
     c(): this
     on(label: string | TemplateStringsArray): string[]
     is(x: FnFilter<string, undefined>): boolean
+    xat(i: number): [string, string]
+    xmid(): [string, string]
   }
 
   interface Function {
@@ -818,12 +851,15 @@ declare global {
     mid(): T | X
     key<K extends keyof T>(key: K): T[K][]
     wo(index: number): T[]
+    woall(): IteratorObject<T[]>
     xy(
       this: IteratorObject<[x: number, y: number], any, any>,
     ): IteratorObject<Point, any, any>
     ij(
       this: IteratorObject<[i: number, j: number], any, any>,
     ): IteratorObject<Point, any, any>
+    all(f: FnFilter<T>): boolean
+    allany(...fs: FnFilter<T>[]): boolean
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
