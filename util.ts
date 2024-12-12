@@ -846,6 +846,18 @@ class Point<T = unknown> {
     readonly g: Grid<T> | undefined,
   ) {}
 
+  c90() {
+    return new Point(-this.y, this.x, this.z, this.g)
+  }
+
+  exists() {
+    if (!this.g) {
+      throw new Error("Cannot check for an unowned point's existence.")
+    }
+
+    return this.g.has(this)
+  }
+
   fnfilter(pt: Point) {
     return this.is(pt)
   }
@@ -1113,6 +1125,10 @@ class Grid<T> {
         row.map((col, j) => f(col, ij(i, j, undefined, this), this)),
       ),
     )
+  }
+
+  c(this: Grid<T & FnCopy>): Grid<T> {
+    return new Grid(this.rows.c())
   }
 }
 

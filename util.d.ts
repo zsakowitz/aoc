@@ -11,6 +11,8 @@ declare class Point<T = unknown> {
     readonly z: number | undefined;
     readonly g: Grid<T> | undefined;
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
+    c90(): Point<T>;
+    exists(): boolean;
     fnfilter(pt: Point): boolean;
     diag(x: number, y: number): (T | undefined)[];
     c(): Point<T>;
@@ -68,6 +70,7 @@ declare class Grid<T> {
     k(): IteratorObject<Point<T>, undefined>;
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;
+    c(this: Grid<T & FnCopy>): Grid<T>;
 }
 declare var __Point: typeof Point;
 type __Point<T> = Point<T>;

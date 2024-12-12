@@ -678,6 +678,15 @@ class Point {
         this.z = z;
         this.g = g;
     }
+    c90() {
+        return new Point(-this.y, this.x, this.z, this.g);
+    }
+    exists() {
+        if (!this.g) {
+            throw new Error("Cannot check for an unowned point's existence.");
+        }
+        return this.g.has(this);
+    }
     fnfilter(pt) {
         return this.is(pt);
     }
@@ -889,6 +898,9 @@ class Grid {
     }
     map(f) {
         return new Grid(this.rows.map((row, i) => row.map((col, j) => f(col, ij(i, j, undefined, this), this))));
+    }
+    c() {
+        return new Grid(this.rows.c());
     }
 }
 export {};
