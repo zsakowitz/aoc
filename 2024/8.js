@@ -15,8 +15,8 @@ function go(/** @type {string} */ input, /** @type {1|2} */ part) {
       .toArray()
       .choose2()) {
       if (part == 1) {
-        b.add(b.sub(a)).xq()?.addIn(output)
-        a.add(a.sub(b)).xq()?.addIn(output)
+        b.add(b, a).xq()?.addIn(output)
+        a.add(a, b).xq()?.addIn(output)
       } else {
         for (const [ax, bx] of [a, b].perms()) {
           ints()

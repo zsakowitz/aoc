@@ -819,11 +819,11 @@ class Point {
         }
         return this.n().filter((pt) => this.g.has(pt));
     }
-    add(other) {
-        return new Point(this.x + other.x, this.y + other.y, this.z == null ? undefined : this.z + other.z, this.g);
+    add(other, from) {
+        return new Point(this.x + other.x - (from ? from.x : 0), this.y + other.y - (from ? from.y : 0), this.z == null ? undefined : this.z + other.z - (from ? from.z : 0), this.g);
     }
-    sub(other) {
-        return new Point(this.x - other.x, this.y - other.y, this.z == null ? undefined : this.z - other.z, this.g);
+    sub(other, from) {
+        return new Point(this.x - other.x + (from ? from.x : 0), this.y - other.y + (from ? from.y : 0), this.z == null ? undefined : this.z - other.z + (from ? from.z : 0), this.g);
     }
     get i() {
         return this.y;

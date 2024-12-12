@@ -33,8 +33,8 @@ declare class Point<T = unknown> {
     rb(): Point<T>;
     n(): Point<T>[];
     nf(): Point<T>[];
-    add(other: Point): Point<T>;
-    sub(other: Point): Point<T>;
+    add(other: Point, from?: Point): Point<T>;
+    sub(other: Point, from?: Point): Point<T>;
     get i(): number;
     get j(): number;
     is(other: Point): boolean;
