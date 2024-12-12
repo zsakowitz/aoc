@@ -1,4 +1,4 @@
-import "../util1.js"
+import "../util.js"
 
 // p1
 const i = input(2024, 4)
