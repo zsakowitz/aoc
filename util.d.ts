@@ -44,13 +44,17 @@ declare class Point<T = unknown> {
 }
 declare class PointSet<T = unknown> {
     pts: Map<string, Point<T>>;
-    constructor();
+    constructor(input?: Iterable<Point<T>>);
+    clear(): void;
     add(pt: Point<T>): void;
     delete(pt: Point<T>): boolean;
     del(pt: Point<T>): boolean;
     has(pt: Point<T>): boolean;
     k(): MapIterator<Point<T>>;
     [Symbol.iterator](): MapIterator<Point<T>>;
+    get size(): number;
+    perim(): number;
+    edges(): number;
 }
 declare class Grid<T> {
     readonly rows: T[][];
@@ -105,7 +109,7 @@ type Mut<T> = {
 declare global {
     interface Number {
         int(): number;
-        fnfilter(x: number): boolean;
+        fnfilter(x: number | Point<number>): boolean;
         check(expected: number): number;
         inc(): number;
         dec(): number;
@@ -124,7 +128,7 @@ declare global {
     interface String {
         int(): number;
         ints(): number[];
-        fnfilter(x: string): boolean;
+        fnfilter(x: string | Point<string>): boolean;
         count(f: FnStrCountTarget): number;
         fncounttarget(source: string): number;
         chars(): string[];
@@ -234,7 +238,7 @@ declare global {
     function t<T extends readonly any[]>(...args: T): Mut<T>;
     function tuple<T extends readonly any[]>(...args: T): Mut<T>;
     var PointSet: typeof __PointSet & {
-        <T>(): PointSet<T>;
+        <T>(init?: Iterable<Point<T>>): PointSet<T>;
     };
     var ps: typeof PointSet;
     var Point: typeof __Point & {

@@ -1,11 +1,11 @@
 import "../util.js"
 
-const g = input(2024, 12).grid()
+function go(/** @type {1 | 2} */ part) {
+  const g = input(2024, 12).grid()
 
-const visited = ps()
+  const visited = ps()
 
-g.k()
-  .sum((k) => {
+  return g.k().sum((k) => {
     if (visited.has(k)) return 0
     const claimed = [k]
     const { v } = k
@@ -20,15 +20,10 @@ g.k()
     }
     claimed.forEach((x) => visited.add(x))
     const area = claimed.length
-    const perim = claimed.sum((p) => {
-      return (
-        +!claimed.any(p.t()) +
-        +!claimed.any(p.b()) +
-        +!claimed.any(p.l()) +
-        +!claimed.any(p.r())
-      )
-    })
-    console.log({ v, area, perim })
+    const perim = part == 1 ? ps(claimed).perim() : ps(claimed).edges()
     return area * perim
   })
-  .check(1449902)
+}
+
+go(1).check(1449902)
+go(2).check(908042)

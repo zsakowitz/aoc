@@ -706,6 +706,50 @@ globalThis.today = function today() {
 
 globalThis.today = today
 
+function cache(key: string, getValue: () => string): string
+
+function cache(
+  key: string,
+  getValue: () => string | Promise<string>,
+): string | Promise<string>
+
+function cache(
+  key: string,
+  getValue: () => string | Promise<string>,
+): string | Promise<string> {
+  if (typeof process == "object") {
+    const file = new URL(
+      "./.aoc/" + key,
+      new URL("file://" + process.env.HOME + "/"),
+    ).pathname
+    if (fs.existsSync(file)) {
+      return fs.readFileSync(file, "utf8")
+    }
+    return Promise.resolve(getValue()).then(async (value) => {
+      await fs.promises.mkdir(path.dirname(file), { recursive: true })
+      fs.writeFileSync(file, value)
+      return value
+    })
+  }
+
+  if (!(localStorage && typeof localStorage == "object")) {
+    throw new Error(
+      "No way to persist data; throwing to avoid hundreds of API calls which will get you blocked.",
+    )
+  }
+
+  const item = localStorage.getItem(".aoc/" + key)
+  if (item != null) {
+    return item
+  }
+  const val = getValue()
+  if (val instanceof Promise) {
+    throw new Error("Asynchronous loading is only supported in Node.JS.")
+  }
+  localStorage.setItem(".aoc/" + key, val)
+  return val
+}
+
 globalThis.checkInput = async function (year, day) {
   if (
     typeof year != "number" ||
@@ -715,52 +759,32 @@ globalThis.checkInput = async function (year, day) {
     throw new Error("Invalid year or day.")
   }
 
-  const code = `ilowi/${year}/${day}/input`
+  const code = `${year}/${day}/input`
   const url = `https://adventofcode.com/${year}/day/${day}/input`
 
-  if (typeof process == "object") {
-    if (arguments.length != 2) {
-      warn`Implicitly using today's input; this will break tomorrow.`
-    }
-    const file = new URL(
-      "./.aoc/" + code,
-      new URL("file://" + process.env.PWD + "/"),
-    ).pathname
-    if (fs.existsSync(file)) {
-      return
-    }
-
+  await cache(code, () => {
     warn`Fetching new input...`
-    await fetch(url, {
-      headers: { cookie: process.env.ILOWI_AOC_COOKIE! },
-    })
-      .then((response) => {
-        if (response.ok) return response.text()
-        throw new Error(`Failed to fetch input for ${year}/${day}.`)
+    if (typeof XMLHttpRequest == "undefined") {
+      return fetch(url, {
+        headers: { cookie: process.env.ILOWI_AOC_COOKIE! },
       })
-      .then(async (text) => {
-        if (text.endsWith("\n")) text = text.slice(0, -1)
-        await fs.promises.mkdir(path.dirname(file), { recursive: true })
-        fs.writeFileSync(file, text)
-        return text
-      })
-    return
-  }
-
-  if (typeof localStorage == "object" && localStorage.getItem(code)) {
-    return
-  }
-
-  const req = new XMLHttpRequest()
-
-  console.log(url)
-  req.open("GET", url, false)
-  req.send()
-  if (req.status == 200) {
-    let text = req.response
-    if (text.endsWith("\n")) text = text.slice(0, -1)
-    localStorage.setItem(code, text)
-  }
+        .then((response) => {
+          if (response.ok) return response.text()
+          throw new Error(`Failed to fetch input for ${year}/${day}.`)
+        })
+        .then((text) => text.trim())
+    }
+    const req = new XMLHttpRequest()
+    req.open("GET", url, false)
+    req.send()
+    if (req.status == 200) {
+      const resp = req.response.trim()
+      localStorage.setItem(code, resp)
+      return resp as string
+    } else {
+      throw new Error("getting input failed", req.response)
+    }
+  })
 }
 
 globalThis.input = function input(year = today()[0], day = today()[1]) {
@@ -772,44 +796,28 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
     throw new Error("Invalid year or day.")
   }
 
-  const code = `ilowi/${year}/${day}/input`
+  const code = `${year}/${day}/input`
   const url = `https://adventofcode.com/${year}/day/${day}/input`
 
-  if (typeof process == "object") {
-    if (arguments.length != 2) {
-      warn`Implicitly using today's input; this will break tomorrow.`
-    }
-    const file = new URL(
-      "./.aoc/" + code,
-      new URL("file://" + process.env.PWD + "/"),
-    ).pathname
-    if (fs.existsSync(file)) {
-      return fs.readFileSync(file, "utf8")
-    }
-
-    throw new Error(
-      "Attempted to fetch input synchronously in an environment without synchronous HTTP requests.",
-    )
+  if (typeof process == "object" && arguments.length != 2) {
+    warn`Implicitly using today's input; this will break tomorrow.`
   }
 
-  if (typeof localStorage == "object") {
-    const value = localStorage.getItem(code)
-    if (value) {
-      return value
+  return cache(code, () => {
+    if (typeof XMLHttpRequest == "undefined") {
+      throw new Error("Cannot get input synchronously in Node.JS.")
     }
-  }
-
-  const req = new XMLHttpRequest()
-
-  console.log(url)
-  req.open("GET", url, false)
-  req.send()
-  if (req.status == 200) {
-    localStorage.setItem(code, req.response)
-    return req.response
-  } else {
-    throw new Error("getting input failed", req.response)
-  }
+    const req = new XMLHttpRequest()
+    req.open("GET", url, false)
+    req.send()
+    if (req.status == 200) {
+      const resp = req.response.trim()
+      localStorage.setItem(code, resp)
+      return resp as string
+    } else {
+      throw new Error("getting input failed", req.response)
+    }
+  })
 }
 
 globalThis.t = globalThis.tuple = function (...args) {
@@ -940,7 +948,17 @@ class Point<T = unknown> {
 class PointSet<T = unknown> {
   pts = new Map<string, Point<T>>()
 
-  constructor() {}
+  constructor(input?: Iterable<Point<T>>) {
+    if (input != null) {
+      for (const x of input) {
+        this.pts.set(x.id(), x)
+      }
+    }
+  }
+
+  clear() {
+    this.pts.clear()
+  }
 
   add(pt: Point<T>) {
     this.pts.set(pt.id(), pt)
@@ -965,10 +983,36 @@ class PointSet<T = unknown> {
   [Symbol.iterator]() {
     return this.pts.values()
   }
+
+  get size() {
+    return this.pts.size
+  }
+
+  perim() {
+    return this.k().sum((p) => {
+      return (
+        +!this.has(p.t()) +
+        +!this.has(p.b()) +
+        +!this.has(p.l()) +
+        +!this.has(p.r())
+      )
+    })
+  }
+
+  edges() {
+    return this.k().sum((p) => {
+      return (
+        +!(this.has(p.l()) || (this.has(p.t()) && !this.has(p.lt()))) +
+        +!(this.has(p.r()) || (this.has(p.t()) && !this.has(p.rt()))) +
+        +!(this.has(p.t()) || (this.has(p.l()) && !this.has(p.lt()))) +
+        +!(this.has(p.b()) || (this.has(p.l()) && !this.has(p.lb())))
+      )
+    })
+  }
 }
 
-globalThis.PointSet = globalThis.ps = function () {
-  return new PointSet()
+globalThis.PointSet = globalThis.ps = function (pts: Iterable<Point>) {
+  return new PointSet(pts)
 } as any
 
 globalThis.pt =
@@ -1262,7 +1306,7 @@ declare global {
   function tuple<T extends readonly any[]>(...args: T): Mut<T>
 
   var PointSet: typeof __PointSet & {
-    <T>(): PointSet<T>
+    <T>(init?: Iterable<Point<T>>): PointSet<T>
   }
   var ps: typeof PointSet
 
