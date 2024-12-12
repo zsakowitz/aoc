@@ -697,6 +697,10 @@ Iterator.prototype.mnn = function* (f) {
   }
 }
 
+Iterator.prototype.run = function () {
+  for (const _ of this);
+}
+
 Object.prototype.do = function (f) {
   return f(this)
 }
@@ -1424,6 +1428,7 @@ declare global {
     mnn<U>(
       f: (value: T, index: number) => U | null | undefined,
     ): Generator<U & {}, unknown, unknown>
+    run(): void
   }
 
   interface Object {

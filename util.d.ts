@@ -241,6 +241,7 @@ declare global {
         ij(this: IteratorObject<[i: number, j: number], any, any>): IteratorObject<Point, any, any>;
         mu<U>(f: (value: T, index: number) => U | typeof none): Generator<Exclude<U, typeof none>, unknown, unknown>;
         mnn<U>(f: (value: T, index: number) => U | null | undefined): Generator<U & {}, unknown, unknown>;
+        run(): void;
     }
     interface Object {
         do<T, U>(this: T, f: (x: T) => U): U;

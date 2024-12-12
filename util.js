@@ -567,6 +567,10 @@ Iterator.prototype.mnn = function* (f) {
         i++;
     }
 };
+Iterator.prototype.run = function () {
+    for (const _ of this)
+        ;
+};
 Object.prototype.do = function (f) {
     return f(this);
 };
