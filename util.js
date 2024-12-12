@@ -298,6 +298,9 @@ RegExp.prototype.fncounttarget = function (source) {
 RegExp.prototype.c = function () {
     return this;
 };
+Array.prototype.any = function (f) {
+    return this.some((x, i) => f.fnfilter(x, i));
+};
 Array.prototype.fncounttarget = function (source) {
     return this.sum((target) => target.fncounttarget(source));
 };
@@ -645,7 +648,7 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
         throw new Error("getting input failed", req.response);
     }
 };
-global.t = globalThis.tuple = function (...args) {
+globalThis.t = globalThis.tuple = function (...args) {
     return args;
 };
 class Point {
@@ -658,6 +661,9 @@ class Point {
         this.y = y;
         this.z = z;
         this.g = g;
+    }
+    fnfilter(pt) {
+        return this.is(pt);
     }
     diag(x, y) {
         if (!this.g) {
@@ -692,6 +698,15 @@ class Point {
     rb() {
         return new Point(this.x + 1, this.y + 1, this.z, this.g);
     }
+    n() {
+        return [this.t(), this.r(), this.b(), this.l()];
+    }
+    nf() {
+        if (!this.g) {
+            warn `Getting filtered neighbors of unowned point; will throw`;
+        }
+        return this.n().filter((pt) => this.g.has(pt));
+    }
     add(other) {
         return new Point(this.x + other.x, this.y + other.y, this.z == null ? undefined : this.z + other.z, this.g);
     }
@@ -703,6 +718,12 @@ class Point {
     }
     get j() {
         return this.x;
+    }
+    is(other) {
+        return this.x == other.x && this.y == other.y && this.z == other.z;
+    }
+    id() {
+        return `${this.x},${this.y},${this.z}`;
     }
     /** Index in a grid like
      *
@@ -720,6 +741,31 @@ class Point {
         return this.g.at(this);
     }
 }
+class PointSet {
+    pts = new Map();
+    constructor() { }
+    add(pt) {
+        this.pts.set(pt.id(), pt);
+    }
+    delete(pt) {
+        return this.pts.delete(pt.id());
+    }
+    del(pt) {
+        return this.pts.delete(pt.id());
+    }
+    has(pt) {
+        return this.pts.has(pt.id());
+    }
+    k() {
+        return this.pts.values();
+    }
+    [Symbol.iterator]() {
+        return this.pts.values();
+    }
+}
+globalThis.PointSet = globalThis.ps = function () {
+    return new PointSet();
+};
 globalThis.pt =
     globalThis.p =
         globalThis.point =

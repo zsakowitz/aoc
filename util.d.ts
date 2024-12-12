@@ -11,6 +11,7 @@ declare class Point<T = unknown> {
     readonly z: number | undefined;
     readonly g: Grid<T> | undefined;
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
+    fnfilter(pt: Point): boolean;
     diag(x: number, y: number): (T | undefined)[];
     c(): Point<T>;
     t(): Point<T>;
@@ -21,10 +22,14 @@ declare class Point<T = unknown> {
     rt(): Point<T>;
     lb(): Point<T>;
     rb(): Point<T>;
+    n(): Point<T>[];
+    nf(): Point<T>[];
     add(other: Point): Point<T>;
     sub(other: Point): Point<T>;
     get i(): number;
     get j(): number;
+    is(other: Point): boolean;
+    id(): string;
     /** Index in a grid like
      *
      * ```
@@ -36,6 +41,16 @@ declare class Point<T = unknown> {
      */
     idxbrbrbr(): number;
     get v(): T | X;
+}
+declare class PointSet<T = unknown> {
+    pts: Map<string, Point<T>>;
+    constructor();
+    add(pt: Point<T>): void;
+    delete(pt: Point<T>): boolean;
+    del(pt: Point<T>): boolean;
+    has(pt: Point<T>): boolean;
+    k(): MapIterator<Point<T>>;
+    [Symbol.iterator](): MapIterator<Point<T>>;
 }
 declare class Grid<T> {
     readonly rows: T[][];
@@ -52,6 +67,8 @@ declare class Grid<T> {
 }
 declare var __Point: typeof Point;
 type __Point<T> = Point<T>;
+declare var __PointSet: typeof PointSet;
+type __PointSet<T> = PointSet<T>;
 type FnFilter<T, I = number> = ((x: T, i: I) => boolean) | {
     fnfilter(this: any, x: T, i: I): boolean;
 };
@@ -148,6 +165,7 @@ declare global {
         c(): RegExp;
     }
     interface Array<T> {
+        any(f: FnFilter<T>): boolean;
         fncounttarget(this: FnStrCountTarget[], source: string): number;
         f(f: FnFilter<T>): T[];
         fi(f: FnFilter<T>): T[];
@@ -215,6 +233,10 @@ declare global {
     function input(year: number, date: number): string;
     function t<T extends readonly any[]>(...args: T): Mut<T>;
     function tuple<T extends readonly any[]>(...args: T): Mut<T>;
+    var PointSet: typeof __PointSet & {
+        <T>(): PointSet<T>;
+    };
+    var ps: typeof PointSet;
     var Point: typeof __Point & {
         <T>(x: number, y: number, z?: number | undefined, g?: Grid<T>): Point<T>;
     };

@@ -66,7 +66,7 @@ Number.prototype.int = function () {
 }
 
 Number.prototype.fnfilter = function (n) {
-  return n === this
+  return n === this || (n instanceof Point && !!n.g && n.v === this)
 }
 
 Number.prototype.check = function (expected) {
@@ -162,7 +162,7 @@ String.prototype.ints = function () {
 }
 
 String.prototype.fnfilter = function (n) {
-  return n === this
+  return n === this || (n instanceof Point && !!n.g && n.v === this)
 }
 
 String.prototype.count = function (f) {
@@ -383,6 +383,10 @@ RegExp.prototype.fncounttarget = function (source) {
 
 RegExp.prototype.c = function () {
   return this
+}
+
+Array.prototype.any = function (f) {
+  return this.some((x, i) => f.fnfilter(x, i))
 }
 
 Array.prototype.fncounttarget = function (source) {
@@ -808,7 +812,7 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
   }
 }
 
-global.t = globalThis.tuple = function (...args) {
+globalThis.t = globalThis.tuple = function (...args) {
   return args
 }
 
@@ -819,6 +823,10 @@ class Point<T = unknown> {
     readonly z: number | undefined,
     readonly g: Grid<T> | undefined,
   ) {}
+
+  fnfilter(pt: Point) {
+    return this.is(pt)
+  }
 
   diag(x: number, y: number) {
     if (!this.g) {
@@ -866,6 +874,17 @@ class Point<T = unknown> {
     return new Point(this.x + 1, this.y + 1, this.z, this.g)
   }
 
+  n() {
+    return [this.t(), this.r(), this.b(), this.l()]
+  }
+
+  nf() {
+    if (!this.g) {
+      warn`Getting filtered neighbors of unowned point; will throw`
+    }
+    return this.n().filter((pt) => this.g!.has(pt))
+  }
+
   add(other: Point) {
     return new Point(
       this.x + other.x,
@@ -892,6 +911,14 @@ class Point<T = unknown> {
     return this.x
   }
 
+  is(other: Point) {
+    return this.x == other.x && this.y == other.y && this.z == other.z
+  }
+
+  id() {
+    return `${this.x},${this.y},${this.z}`
+  }
+
   /** Index in a grid like
    *
    * ```
@@ -909,6 +936,40 @@ class Point<T = unknown> {
     return this.g!.at(this)
   }
 }
+
+class PointSet<T = unknown> {
+  pts = new Map<string, Point<T>>()
+
+  constructor() {}
+
+  add(pt: Point<T>) {
+    this.pts.set(pt.id(), pt)
+  }
+
+  delete(pt: Point<T>): boolean {
+    return this.pts.delete(pt.id())
+  }
+
+  del(pt: Point<T>): boolean {
+    return this.pts.delete(pt.id())
+  }
+
+  has(pt: Point<T>) {
+    return this.pts.has(pt.id())
+  }
+
+  k() {
+    return this.pts.values()
+  }
+
+  [Symbol.iterator]() {
+    return this.pts.values()
+  }
+}
+
+globalThis.PointSet = globalThis.ps = function () {
+  return new PointSet()
+} as any
 
 globalThis.pt =
   globalThis.p =
@@ -1018,6 +1079,9 @@ class Grid<T> {
 declare var __Point: typeof Point
 type __Point<T> = Point<T>
 
+declare var __PointSet: typeof PointSet
+type __PointSet<T> = PointSet<T>
+
 type FnFilter<T, I = number> =
   | ((x: T, i: I) => boolean)
   | { fnfilter(this: any, x: T, i: I): boolean }
@@ -1043,7 +1107,7 @@ type Mut<T> = { -readonly [K in keyof T]: T[K] }
 declare global {
   interface Number {
     int(): number
-    fnfilter(x: number): boolean
+    fnfilter(x: number | Point<number>): boolean
     check(expected: number): number
     inc(): number
     dec(): number
@@ -1063,7 +1127,7 @@ declare global {
   interface String {
     int(): number
     ints(): number[]
-    fnfilter(x: string): boolean
+    fnfilter(x: string | Point<string>): boolean
     count(f: FnStrCountTarget): number
     fncounttarget(source: string): number
     chars(): string[]
@@ -1112,6 +1176,7 @@ declare global {
   }
 
   interface Array<T> {
+    any(f: FnFilter<T>): boolean
     fncounttarget(this: FnStrCountTarget[], source: string): number
     f(f: FnFilter<T>): T[]
     fi(f: FnFilter<T>): T[]
@@ -1195,6 +1260,11 @@ declare global {
   function input(year: number, date: number): string
   function t<T extends readonly any[]>(...args: T): Mut<T>
   function tuple<T extends readonly any[]>(...args: T): Mut<T>
+
+  var PointSet: typeof __PointSet & {
+    <T>(): PointSet<T>
+  }
+  var ps: typeof PointSet
 
   var Point: typeof __Point & {
     <T>(x: number, y: number, z?: number | undefined, g?: Grid<T>): Point<T>
