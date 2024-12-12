@@ -41,7 +41,7 @@ function hasLoop(/** @type {ReturnType<string['grid']>} */ g) {
 }
 
 const g2 = input(2024, 6).grid()
-g2.k()
+ps.k()
   .count((k) => {
     const a = g2.c()
     a.rows[k.i][k.j] = "#"
