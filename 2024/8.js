@@ -15,24 +15,14 @@ function go(/** @type {string} */ input, /** @type {1|2} */ part) {
       .toArray()
     for (const [a, b] of poss.choose2()) {
       if (part == 1) {
-        const c = pt(b.x + (b.x - a.x), b.y + (b.y - a.y))
-        const d = pt(a.x + (a.x - b.x), a.y + (a.y - b.y))
-        if (g.has(c)) {
-          output.add(c)
-        }
-        if (g.has(d)) {
-          output.add(d)
-        }
+        const c = b.add(b.sub(a))
+        const d = a.add(a.sub(b))
+        c.xq()?.addIn(output)
+        d.xq()?.addIn(output)
       } else {
         for (const [ax, bx] of [a, b].perms()) {
           for (const n of ints()) {
-            if (
-              !bx
-                .add(bx.sub(ax).scale(n))
-                .xq()
-                ?.do((c) => (output.add(c), 2))
-            )
-              break
+            if (!bx.add(bx.sub(ax).scale(n)).xq()?.addIn(output)) break
           }
         }
       }

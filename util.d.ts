@@ -11,6 +11,8 @@ declare class Point<T = unknown> {
     readonly z: number | undefined;
     readonly g: Grid<T> | undefined;
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
+    addIn(set: PointSet<T>): this;
+    delIn(set: PointSet<T>): this;
     scale(n: number): Point<T>;
     c90(): Point<T>;
     exists(): boolean;

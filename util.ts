@@ -907,6 +907,16 @@ class Point<T = unknown> {
     readonly g: Grid<T> | undefined,
   ) {}
 
+  addIn(set: PointSet<T>) {
+    set.add(this)
+    return this
+  }
+
+  delIn(set: PointSet<T>) {
+    set.del(this)
+    return this
+  }
+
   scale(n: number) {
     return new Point(this.x * n, this.y * n, this.z, this.g)
   }

@@ -736,6 +736,14 @@ class Point {
         this.z = z;
         this.g = g;
     }
+    addIn(set) {
+        set.add(this);
+        return this;
+    }
+    delIn(set) {
+        set.del(this);
+        return this;
+    }
     scale(n) {
         return new Point(this.x * n, this.y * n, this.z, this.g);
     }
