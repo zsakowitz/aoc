@@ -65,6 +65,13 @@ Number.prototype.int = function () {
   return +this
 }
 
+Number.prototype.concat = function (other) {
+  if (!Number.isSafeInteger(this) || !Number.isSafeInteger(other)) {
+    warn`Concatenating numbers which aren't safe integers.`
+  }
+  return +(this.toString() + other)
+}
+
 Number.prototype.fnfilter = function (n) {
   return n === this || (n instanceof Point && !!n.g && n.v === this)
 }
@@ -824,6 +831,13 @@ globalThis.t = globalThis.tuple = function (...args) {
   return args
 }
 
+globalThis.nn = function (value) {
+  if (value == null) {
+    throw new Error("Non-null assertion failed.")
+  }
+  return value
+}
+
 class Point<T = unknown> {
   constructor(
     readonly x: number,
@@ -1151,6 +1165,7 @@ type Mut<T> = { -readonly [K in keyof T]: T[K] }
 declare global {
   interface Number {
     int(): number
+    concat(other: number): number
     fnfilter(x: number | Point<number>): boolean
     check(expected: number): number
     inc(): number
@@ -1304,6 +1319,8 @@ declare global {
   function input(year: number, date: number): string
   function t<T extends readonly any[]>(...args: T): Mut<T>
   function tuple<T extends readonly any[]>(...args: T): Mut<T>
+
+  function nn<T>(value: T): NonNullable<T>
 
   var PointSet: typeof __PointSet & {
     <T>(init?: Iterable<Point<T>>): PointSet<T>

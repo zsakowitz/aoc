@@ -52,6 +52,12 @@ const warn = (() => {
 Number.prototype.int = function () {
     return +this;
 };
+Number.prototype.concat = function (other) {
+    if (!Number.isSafeInteger(this) || !Number.isSafeInteger(other)) {
+        warn `Concatenating numbers which aren't safe integers.`;
+    }
+    return +(this.toString() + other);
+};
 Number.prototype.fnfilter = function (n) {
     return n === this || (n instanceof Point && !!n.g && n.v === this);
 };
@@ -654,6 +660,12 @@ globalThis.input = function input(year = today()[0], day = today()[1]) {
 };
 globalThis.t = globalThis.tuple = function (...args) {
     return args;
+};
+globalThis.nn = function (value) {
+    if (value == null) {
+        throw new Error("Non-null assertion failed.");
+    }
+    return value;
 };
 class Point {
     x;

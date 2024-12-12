@@ -1,5 +1,6 @@
 import { Worker, isMainThread, parentPort } from "node:worker_threads"
 import "./load.js"
+import "./util.js"
 
 if (isMainThread) {
   const queued = [
@@ -17,6 +18,7 @@ if (isMainThread) {
     "./2024/3.js",
     "./2024/4.js",
     "./2024/5.js",
+    "./2024/7.js",
     "./2024/8.js",
     "./2024/9.js",
     "./2024/10.js",

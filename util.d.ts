@@ -109,6 +109,7 @@ type Mut<T> = {
 declare global {
     interface Number {
         int(): number;
+        concat(other: number): number;
         fnfilter(x: number | Point<number>): boolean;
         check(expected: number): number;
         inc(): number;
@@ -237,6 +238,7 @@ declare global {
     function input(year: number, date: number): string;
     function t<T extends readonly any[]>(...args: T): Mut<T>;
     function tuple<T extends readonly any[]>(...args: T): Mut<T>;
+    function nn<T>(value: T): NonNullable<T>;
     var PointSet: typeof __PointSet & {
         <T>(init?: Iterable<Point<T>>): PointSet<T>;
     };
