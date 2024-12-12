@@ -9,11 +9,7 @@ function go(/** @type {string} */ input, /** @type {1|2} */ part) {
     .mall(/[^.\s]/g)
     .unique()
   for (const char of chars) {
-    for (const [a, b] of g
-      .k()
-      .filter((x) => x.v == char)
-      .toArray()
-      .choose2()) {
+    for (const [a, b] of g.k().f(char).toArray().choose2()) {
       if (part == 1) {
         b.add(b, a).xq()?.addIn(output)
         a.add(a, b).xq()?.addIn(output)

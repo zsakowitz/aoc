@@ -235,6 +235,7 @@ declare global {
         acc<U>(f: (a: U, b: T, index: number) => U, initial: U): IteratorObject<U>;
         counts(f?: FnFilter<T> | null): IteratorObject<[number, T], number, unknown>;
         fi(f: FnFilter<T>): number;
+        f(f: FnFilter<T>): IteratorObject<T>;
         by<U>(other: IteratorObject<U> | U[]): IteratorObject<[T, U]>;
         key<K extends keyof T>(key: K): IteratorObject<T[K], undefined, unknown>;
         xy(this: IteratorObject<[x: number, y: number], any, any>): IteratorObject<Point, any, any>;

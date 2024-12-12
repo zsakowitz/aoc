@@ -534,6 +534,14 @@ Iterator.prototype.fi = function (f) {
     }
     return -1;
 };
+Iterator.prototype.f = function* (f) {
+    let i = 0;
+    for (const v of this) {
+        if (f.fnfilter(v, i))
+            yield v;
+        i++;
+    }
+};
 Iterator.prototype.by = function (other) {
     other = other.toArray();
     return this.flatMap((x) => other.map((y) => [x, y]));
