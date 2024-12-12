@@ -392,6 +392,13 @@ RegExp.prototype.c = function () {
   return this
 }
 
+Object.defineProperty(Array.prototype, "j", {
+  configurable: true,
+  get() {
+    return this.join("")
+  },
+})
+
 Array.prototype.any = function (f) {
   return this.some((x, i) => f.fnfilter(x, i))
 }
@@ -573,6 +580,32 @@ Array.prototype.fnfilter = function (...args) {
   return this.some((f) => f.fnfilter(...args))
 }
 
+Array.prototype.choose2 = function* () {
+  for (let i = 0; i < this.length; i++) {
+    if (!(i in this)) continue
+    for (let j = i + 1; j < this.length; j++) {
+      if (!(j in this)) continue
+      yield [this[i]!, this[j]!, i, j]
+    }
+  }
+}
+
+Array.prototype.perms = function* () {
+  if (this.length == 0) {
+    return
+  }
+
+  if (this.length == 1) {
+    yield [this[0]!]
+  }
+
+  for (const rest of this.slice(1).perms()) {
+    for (let i = 0; i < this.length; i++) {
+      yield rest.toSpliced(i, 0, this[0]!)
+    }
+  }
+}
+
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum as any
 Iterator.prototype.prod = Array.prototype.prod as any
@@ -642,6 +675,26 @@ Iterator.prototype.xy = function () {
 
 Iterator.prototype.ij = function () {
   return this.map(([i, j]) => ij(i, j))
+}
+
+Iterator.prototype.mu = function* (f) {
+  let i = 0
+  for (const v of this) {
+    const n = f(v, i)
+    if (n === none) return
+    yield n as any
+    i++
+  }
+}
+
+Iterator.prototype.mnn = function* (f) {
+  let i = 0
+  for (const v of this) {
+    const n = f(v, i)
+    if (n == null) return
+    yield n as any
+    i++
+  }
 }
 
 Object.prototype.do = function (f) {
@@ -838,6 +891,14 @@ globalThis.nn = function (value) {
   return value
 }
 
+globalThis.mx = function (value) {
+  if (Array.isArray(value)) {
+    return String.raw({ raw: value }).mx()
+  } else {
+    return (value as string).mx()
+  }
+}
+
 class Point<T = unknown> {
   constructor(
     readonly x: number,
@@ -845,6 +906,10 @@ class Point<T = unknown> {
     readonly z: number | undefined,
     readonly g: Grid<T> | undefined,
   ) {}
+
+  scale(n: number) {
+    return new Point(this.x * n, this.y * n, this.z, this.g)
+  }
 
   c90() {
     return new Point(-this.y, this.x, this.z, this.g)
@@ -856,6 +921,12 @@ class Point<T = unknown> {
     }
 
     return this.g.has(this)
+  }
+
+  xq() {
+    if (this.exists()) {
+      return this
+    }
   }
 
   fnfilter(pt: Point) {
@@ -870,6 +941,18 @@ class Point<T = unknown> {
     }
 
     return this.g.diag(this, x, y)
+  }
+
+  drb(s: number) {
+    return this.diag(s, s)
+  }
+
+  drt(s: number) {
+    return this.diag(s, -s)
+  }
+
+  dlb(s: number) {
+    return this.diag(-s, s)
   }
 
   c() {
@@ -1132,26 +1215,33 @@ class Grid<T> {
   }
 }
 
-// namespace TaggedEnum {
-//   declare const TAG: unique symbol
-//
-//   const tags = new WeakMap()
-//
-//   export class Tagged<T, K extends string> {
-//     ty: K
-//   }
-//
-//   export function attachTag<T extends WeakKey, K extends string>(
-//     value: T,
-//     tag: K,
-//   ): Tagged<T, K> {
-//     tags.set(value, tag)
-//     return value as Tagged<T, K>
-//   }
-// }
+globalThis.Grid = function (rows = []) {
+  return new Grid(rows)
+} as any
+
+globalThis.ints = Object.assign(
+  function* () {
+    for (let i = 0; ; i++) {
+      yield i
+    }
+  },
+  {
+    *[Symbol.iterator]() {
+      for (let i = 0; ; i++) {
+        yield i
+      }
+    },
+  },
+)
+;(Symbol as any).none ??= Symbol()
+
+globalThis.none = Symbol.none
 
 declare var __Point: typeof Point
 type __Point<T> = Point<T>
+
+declare var __Grid: typeof Grid
+type __Grid<T> = Grid<T>
 
 declare var __PointSet: typeof PointSet
 type __PointSet<T> = PointSet<T>
@@ -1251,6 +1341,7 @@ declare global {
   }
 
   interface Array<T> {
+    j: string
     any(f: FnFilter<T>): boolean
     fncounttarget(this: FnStrCountTarget[], source: string): number
     f(f: FnFilter<T>): T[]
@@ -1296,6 +1387,8 @@ declare global {
     allany(...fs: FnFilter<T>[]): boolean
     unique(key?: (x: T, i: number, a: T[]) => any): T[]
     fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean
+    choose2(): Generator<[x: T, y: T, xi: number, yi: number]>
+    perms(): Generator<{ [K in keyof this]: this[keyof this & number] }>
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
@@ -1315,6 +1408,12 @@ declare global {
     ij(
       this: IteratorObject<[i: number, j: number], any, any>,
     ): IteratorObject<Point, any, any>
+    mu<U>(
+      f: (value: T, index: number) => U | typeof none,
+    ): Generator<Exclude<U, typeof none>, unknown, unknown>
+    mnn<U>(
+      f: (value: T, index: number) => U | null | undefined,
+    ): Generator<U & {}, unknown, unknown>
   }
 
   interface Object {
@@ -1337,6 +1436,9 @@ declare global {
   function tuple<T extends readonly any[]>(...args: T): Mut<T>
 
   function nn<T>(value: T): NonNullable<T>
+  function mx(
+    x: string | TemplateStringsArray,
+  ): [normal: string, reversed: string]
 
   var PointSet: typeof __PointSet & {
     <T>(init?: Iterable<Point<T>>): PointSet<T>
@@ -1351,6 +1453,21 @@ declare global {
   var p: typeof Point
   var ij: typeof Point
   type Point<T = unknown> = __Point<T>
+
+  var Grid: typeof __Grid & {
+    <T>(rows?: T[][]): Grid<T>
+    new <T>(rows?: T[][]): Grid<T>
+  }
+  type Grid<T> = __Grid<T>
+
+  var ints: {
+    (): Generator<number, never, unknown>
+    [Symbol.iterator](): Generator<number, never, unknown>
+  }
+  interface SymbolConstructor {
+    readonly none: unique symbol
+  }
+  var none: typeof Symbol.none
 }
 
 // sbyRawUnsafe sby sum prod tx num bigint nums ints uints digits digitnamesfwd digitnamesrev sws s filterByFnRaw count w ud sd abs ispos isneg everyAny everyany everyFn someFn none wo indexes idxs all any check counttarget gcd lcm by toArray rbr grid stringis asnumberbase on fm xon noempty i reject mid wi ins k perms u uniq unique fncopy r rf

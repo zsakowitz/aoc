@@ -7,13 +7,9 @@ const i = input(2024, 4)
   i
     .grid()
     .k()
-    .sum(
-      (q) =>
-        +q.diag(3, 3).join("").is("XMAS".mx()) +
-        +q.diag(3, -3).join("").is("XMAS".mx()),
-    ) +
-  i.count("XMAS".mx()) +
-  i.tx().count("XMAS".mx())
+    .sum((q) => +q.drb(3).j.is(mx`XMAS`) + +q.drt(3).j.is(mx`XMAS`)) +
+  i.count(mx`XMAS`) +
+  i.tx().count(mx`XMAS`)
 ).check(2504)
 
 // p2
@@ -21,9 +17,13 @@ i.grid()
   .k()
   .sum(
     (pt) =>
-      +(
-        pt.lt().diag(2, 2).join("").is("SAM".mx()) &&
-        pt.rt().diag(-2, 2).join("").is("SAM".mx())
-      ),
+      pt
+        .lt()
+        .drb(2)
+        .j.is(mx`SAM`) &&
+      pt
+        .rt()
+        .dlb(2)
+        .j.is(mx`SAM`),
   )
   .check(1923)

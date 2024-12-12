@@ -11,10 +11,15 @@ declare class Point<T = unknown> {
     readonly z: number | undefined;
     readonly g: Grid<T> | undefined;
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
+    scale(n: number): Point<T>;
     c90(): Point<T>;
     exists(): boolean;
+    xq(): this | undefined;
     fnfilter(pt: Point): boolean;
     diag(x: number, y: number): (T | undefined)[];
+    drb(s: number): (T | undefined)[];
+    drt(s: number): (T | undefined)[];
+    dlb(s: number): (T | undefined)[];
     c(): Point<T>;
     t(): Point<T>;
     l(): Point<T>;
@@ -74,6 +79,8 @@ declare class Grid<T> {
 }
 declare var __Point: typeof Point;
 type __Point<T> = Point<T>;
+declare var __Grid: typeof Grid;
+type __Grid<T> = Grid<T>;
 declare var __PointSet: typeof PointSet;
 type __PointSet<T> = PointSet<T>;
 type FnFilter<T, I = number> = ((x: T, i: I) => boolean) | {
@@ -173,6 +180,7 @@ declare global {
         c(): RegExp;
     }
     interface Array<T> {
+        j: string;
         any(f: FnFilter<T>): boolean;
         fncounttarget(this: FnStrCountTarget[], source: string): number;
         f(f: FnFilter<T>): T[];
@@ -211,6 +219,10 @@ declare global {
         allany(...fs: FnFilter<T>[]): boolean;
         unique(key?: (x: T, i: number, a: T[]) => any): T[];
         fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean;
+        choose2(): Generator<[x: T, y: T, xi: number, yi: number]>;
+        perms(): Generator<{
+            [K in keyof this]: this[keyof this & number];
+        }>;
     }
     interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
         sum(this: IteratorObject<number | boolean>): number;
@@ -225,6 +237,8 @@ declare global {
         key<K extends keyof T>(key: K): IteratorObject<T[K], undefined, unknown>;
         xy(this: IteratorObject<[x: number, y: number], any, any>): IteratorObject<Point, any, any>;
         ij(this: IteratorObject<[i: number, j: number], any, any>): IteratorObject<Point, any, any>;
+        mu<U>(f: (value: T, index: number) => U | typeof none): Generator<Exclude<U, typeof none>, unknown, unknown>;
+        mnn<U>(f: (value: T, index: number) => U | null | undefined): Generator<U & {}, unknown, unknown>;
     }
     interface Object {
         do<T, U>(this: T, f: (x: T) => U): U;
@@ -242,6 +256,7 @@ declare global {
     function t<T extends readonly any[]>(...args: T): Mut<T>;
     function tuple<T extends readonly any[]>(...args: T): Mut<T>;
     function nn<T>(value: T): NonNullable<T>;
+    function mx(x: string | TemplateStringsArray): [normal: string, reversed: string];
     var PointSet: typeof __PointSet & {
         <T>(init?: Iterable<Point<T>>): PointSet<T>;
     };
@@ -254,5 +269,18 @@ declare global {
     var p: typeof Point;
     var ij: typeof Point;
     type Point<T = unknown> = __Point<T>;
+    var Grid: typeof __Grid & {
+        <T>(rows?: T[][]): Grid<T>;
+        new <T>(rows?: T[][]): Grid<T>;
+    };
+    type Grid<T> = __Grid<T>;
+    var ints: {
+        (): Generator<number, never, unknown>;
+        [Symbol.iterator](): Generator<number, never, unknown>;
+    };
+    interface SymbolConstructor {
+        readonly none: unique symbol;
+    }
+    var none: typeof Symbol.none;
 }
 export {};

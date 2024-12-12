@@ -304,6 +304,12 @@ RegExp.prototype.fncounttarget = function (source) {
 RegExp.prototype.c = function () {
     return this;
 };
+Object.defineProperty(Array.prototype, "j", {
+    configurable: true,
+    get() {
+        return this.join("");
+    },
+});
 Array.prototype.any = function (f) {
     return this.some((x, i) => f.fnfilter(x, i));
 };
@@ -453,6 +459,30 @@ Array.prototype.unique = function (key) {
 Array.prototype.fnfilter = function (...args) {
     return this.some((f) => f.fnfilter(...args));
 };
+Array.prototype.choose2 = function* () {
+    for (let i = 0; i < this.length; i++) {
+        if (!(i in this))
+            continue;
+        for (let j = i + 1; j < this.length; j++) {
+            if (!(j in this))
+                continue;
+            yield [this[i], this[j], i, j];
+        }
+    }
+};
+Array.prototype.perms = function* () {
+    if (this.length == 0) {
+        return;
+    }
+    if (this.length == 1) {
+        yield [this[0]];
+    }
+    for (const rest of this.slice(1).perms()) {
+        for (let i = 0; i < this.length; i++) {
+            yield rest.toSpliced(i, 0, this[0]);
+        }
+    }
+};
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
 Iterator.prototype.prod = Array.prototype.prod;
@@ -516,6 +546,26 @@ Iterator.prototype.xy = function () {
 };
 Iterator.prototype.ij = function () {
     return this.map(([i, j]) => ij(i, j));
+};
+Iterator.prototype.mu = function* (f) {
+    let i = 0;
+    for (const v of this) {
+        const n = f(v, i);
+        if (n === none)
+            return;
+        yield n;
+        i++;
+    }
+};
+Iterator.prototype.mnn = function* (f) {
+    let i = 0;
+    for (const v of this) {
+        const n = f(v, i);
+        if (n == null)
+            return;
+        yield n;
+        i++;
+    }
 };
 Object.prototype.do = function (f) {
     return f(this);
@@ -667,6 +717,14 @@ globalThis.nn = function (value) {
     }
     return value;
 };
+globalThis.mx = function (value) {
+    if (Array.isArray(value)) {
+        return String.raw({ raw: value }).mx();
+    }
+    else {
+        return value.mx();
+    }
+};
 class Point {
     x;
     y;
@@ -678,6 +736,9 @@ class Point {
         this.z = z;
         this.g = g;
     }
+    scale(n) {
+        return new Point(this.x * n, this.y * n, this.z, this.g);
+    }
     c90() {
         return new Point(-this.y, this.x, this.z, this.g);
     }
@@ -687,6 +748,11 @@ class Point {
         }
         return this.g.has(this);
     }
+    xq() {
+        if (this.exists()) {
+            return this;
+        }
+    }
     fnfilter(pt) {
         return this.is(pt);
     }
@@ -695,6 +761,15 @@ class Point {
             throw new Error("Cannot get points along a diagonal from a `Point` without an owner.");
         }
         return this.g.diag(this, x, y);
+    }
+    drb(s) {
+        return this.diag(s, s);
+    }
+    drt(s) {
+        return this.diag(s, -s);
+    }
+    dlb(s) {
+        return this.diag(-s, s);
     }
     c() {
         return new Point(this.x, this.y, this.z, this.g);
@@ -903,4 +978,20 @@ class Grid {
         return new Grid(this.rows.c());
     }
 }
+globalThis.Grid = function (rows = []) {
+    return new Grid(rows);
+};
+globalThis.ints = Object.assign(function* () {
+    for (let i = 0;; i++) {
+        yield i;
+    }
+}, {
+    *[Symbol.iterator]() {
+        for (let i = 0;; i++) {
+            yield i;
+        }
+    },
+});
+Symbol.none ??= Symbol();
+globalThis.none = Symbol.none;
 export {};
