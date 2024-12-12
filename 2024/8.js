@@ -24,15 +24,15 @@ function go(/** @type {string} */ input, /** @type {1|2} */ part) {
           output.add(d)
         }
       } else {
-        for (const [ax, bx] of [
-          [a, b],
-          [b, a],
-        ]) {
-          for (const n of ints) {
-            const c = bx.add(bx.sub(ax).scale(n))
-            if (g.has(c)) {
-              output.add(c)
-            } else break
+        for (const [ax, bx] of [a, b].perms()) {
+          for (const n of ints()) {
+            if (
+              !bx
+                .add(bx.sub(ax).scale(n))
+                .xq()
+                ?.do((c) => (output.add(c), 2))
+            )
+              break
           }
         }
       }
