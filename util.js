@@ -459,7 +459,7 @@ Array.prototype.unique = function (key) {
 Array.prototype.fnfilter = function (...args) {
     return this.some((f) => f.fnfilter(...args));
 };
-Array.prototype.choose2 = function* () {
+Array.prototype.choose2 = Array.prototype.c2 = function* () {
     for (let i = 0; i < this.length; i++) {
         if (!(i in this))
             continue;
@@ -541,6 +541,9 @@ Iterator.prototype.f = function* (f) {
             yield v;
         i++;
     }
+};
+Iterator.prototype.arr = function () {
+    return this.toArray();
 };
 Iterator.prototype.by = function (other) {
     other = other.toArray();

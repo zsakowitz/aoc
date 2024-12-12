@@ -580,7 +580,7 @@ Array.prototype.fnfilter = function (...args) {
   return this.some((f) => f.fnfilter(...args))
 }
 
-Array.prototype.choose2 = function* () {
+Array.prototype.choose2 = Array.prototype.c2 = function* () {
   for (let i = 0; i < this.length; i++) {
     if (!(i in this)) continue
     for (let j = i + 1; j < this.length; j++) {
@@ -666,6 +666,10 @@ Iterator.prototype.f = function* (f) {
     if (f.fnfilter(v, i)) yield v
     i++
   }
+}
+
+Iterator.prototype.arr = function () {
+  return this.toArray()
 }
 
 Iterator.prototype.by = function (other) {
@@ -1410,6 +1414,7 @@ declare global {
     unique(key?: (x: T, i: number, a: T[]) => any): T[]
     fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean
     choose2(): Generator<[x: T, y: T, xi: number, yi: number]>
+    c2(): Generator<[x: T, y: T, xi: number, yi: number]>
     perms(): Generator<{ [K in keyof this]: this[keyof this & number] }>
   }
 
@@ -1423,6 +1428,7 @@ declare global {
     counts(f?: FnFilter<T> | null): IteratorObject<[number, T], number, unknown>
     fi(f: FnFilter<T>): number
     f(f: FnFilter<T>): IteratorObject<T>
+    arr(): T[]
     by<U>(other: IteratorObject<U> | U[]): IteratorObject<[T, U]>
     key<K extends keyof T>(key: K): IteratorObject<T[K], undefined, unknown>
     xy(
