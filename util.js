@@ -50,7 +50,7 @@ const warn = (() => {
     };
 })();
 Number.prototype.int = function () {
-    return this;
+    return +this;
 };
 Number.prototype.fnfilter = function (n) {
     return n === this;
@@ -62,7 +62,7 @@ Number.prototype.check = function (expected) {
     else {
         console.log(`${colors.green}PASSED: ${expected}${colors.reset}`);
     }
-    return this;
+    return +this;
 };
 Number.prototype.inc = function () {
     return this + 1;
@@ -71,7 +71,7 @@ Number.prototype.dec = function () {
     return this - 1;
 };
 Number.prototype.c = function () {
-    return this;
+    return +this;
 };
 Number.prototype.sd = function (other) {
     return this - other;
@@ -148,7 +148,7 @@ String.prototype.sws = function () {
     return this.split(/\s+/g);
 };
 String.prototype.c = function () {
-    return this;
+    return "" + this;
 };
 String.prototype.on = function (label) {
     const l = Array.isArray(label)
@@ -268,7 +268,7 @@ String.prototype.digitnamesfwd = function () {
 };
 String.prototype.digitnamesrev = function () {
     return this.reverse()
-        .mall(/\d|enin|thgie|neves|xis|evif|ruof|eerht|owt|eno/g)
+        .mall(/\d|thgie|neves|eerht|enin|evif|ruof|xis|owt|eno/g)
         .map((x) => x
         .reverse()
         .digitname()
@@ -299,7 +299,7 @@ RegExp.prototype.c = function () {
     return this;
 };
 Array.prototype.fncounttarget = function (source) {
-    return this.sum((target) => target.counttarget(source));
+    return this.sum((target) => target.fncounttarget(source));
 };
 Array.prototype.f = function (f) {
     return this.filter((x, i) => f.fnfilter(x, i));

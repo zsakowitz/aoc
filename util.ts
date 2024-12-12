@@ -62,7 +62,7 @@ const warn = (() => {
 })()
 
 Number.prototype.int = function () {
-  return this
+  return +this
 }
 
 Number.prototype.fnfilter = function (n) {
@@ -77,7 +77,7 @@ Number.prototype.check = function (expected) {
   } else {
     console.log(`${colors.green}PASSED: ${expected}${colors.reset}`)
   }
-  return this
+  return +this
 }
 
 Number.prototype.inc = function (this: number) {
@@ -89,7 +89,7 @@ Number.prototype.dec = function (this: number) {
 }
 
 Number.prototype.c = function () {
-  return this
+  return +this
 }
 
 Number.prototype.sd = function (this: number, other) {
@@ -190,7 +190,7 @@ String.prototype.sws = function () {
 }
 
 String.prototype.c = function () {
-  return this
+  return "" + this
 }
 
 String.prototype.on = function (label) {
@@ -345,7 +345,7 @@ String.prototype.digitnamesfwd = function (this: string) {
 
 String.prototype.digitnamesrev = function (this: string) {
   return this.reverse()
-    .mall(/\d|enin|thgie|neves|xis|evif|ruof|eerht|owt|eno/g)
+    .mall(/\d|thgie|neves|eerht|enin|evif|ruof|xis|owt|eno/g)
     .map((x) =>
       x
         .reverse()
@@ -386,7 +386,7 @@ RegExp.prototype.c = function () {
 }
 
 Array.prototype.fncounttarget = function (source) {
-  return this.sum((target) => target.counttarget(source))
+  return this.sum((target) => target.fncounttarget(source))
 }
 
 Array.prototype.f = function (f) {
@@ -997,6 +997,24 @@ class Grid<T> {
   }
 }
 
+// namespace TaggedEnum {
+//   declare const TAG: unique symbol
+//
+//   const tags = new WeakMap()
+//
+//   export class Tagged<T, K extends string> {
+//     ty: K
+//   }
+//
+//   export function attachTag<T extends WeakKey, K extends string>(
+//     value: T,
+//     tag: K,
+//   ): Tagged<T, K> {
+//     tags.set(value, tag)
+//     return value as Tagged<T, K>
+//   }
+// }
+
 declare var __Point: typeof Point
 type __Point<T> = Point<T>
 
@@ -1020,15 +1038,16 @@ interface FnUd {
 interface FnCopy {
   c(): this
 }
+type Mut<T> = { -readonly [K in keyof T]: T[K] }
 
 declare global {
   interface Number {
-    int(): this
+    int(): number
     fnfilter(x: number): boolean
-    check(expected: number): this
+    check(expected: number): number
     inc(): number
     dec(): number
-    c(): this
+    c(): number
     sd(other: number): number
     ud(other: number): number
     is(x: FnFilter<number, undefined>): boolean
@@ -1051,7 +1070,7 @@ declare global {
     lines(): string[]
     grid(): Grid<string>
     sws(): string[]
-    c(): this
+    c(): string
     on(label: string | TemplateStringsArray): string[]
     is(x: FnFilter<string, undefined>): boolean
     xat(i: number): [string, string]
@@ -1076,7 +1095,7 @@ declare global {
 
   interface Function {
     fnfilter<T, I>(this: (x: T, i: I) => boolean, x: T, i: I): boolean
-    c(): this
+    c<T>(this: T): T
     inv<F extends (...args: any[]) => any>(
       this: F,
     ): (this: ThisParameterType<F>, ...args: Parameters<F>) => boolean
@@ -1089,11 +1108,11 @@ declare global {
   interface RegExp {
     fnfilter(x: string): boolean
     fncounttarget(source: string): number
-    c(): this
+    c(): RegExp
   }
 
   interface Array<T> {
-    fncounttarget(source: string): number
+    fncounttarget(this: FnStrCountTarget[], source: string): number
     f(f: FnFilter<T>): T[]
     fi(f: FnFilter<T>): T[]
     k(): IteratorObject<number>
@@ -1160,7 +1179,7 @@ declare global {
 
   interface Object {
     do<T, U>(this: T, f: (x: T) => U): U
-    r(this: FnCopy, n: number): this[]
+    r<T>(this: Extract<T, FnCopy>, n: number): T[]
   }
 
   interface Boolean {
@@ -1174,8 +1193,8 @@ declare global {
   function today(): [year: number, date: number]
   function checkInput(year: number, date: number): Promise<void>
   function input(year: number, date: number): string
-  function t<T extends any[]>(...args: T): T
-  function tuple<T extends any[]>(...args: T): T
+  function t<T extends readonly any[]>(...args: T): Mut<T>
+  function tuple<T extends readonly any[]>(...args: T): Mut<T>
 
   var Point: typeof __Point & {
     <T>(x: number, y: number, z?: number | undefined, g?: Grid<T>): Point<T>
