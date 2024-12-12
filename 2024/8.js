@@ -1,29 +1,25 @@
 import "../util.js"
 
 function go(/** @type {string} */ input, /** @type {1|2} */ part) {
-  // same on both
   const g = input.grid()
   const output = ps()
-  const chars = input
+  input
     .trim()
     .mall(/[^.\s]/g)
     .unique()
-  for (const char of chars) {
-    for (const [a, b] of g.k().f(char).arr().c2()) {
-      if (part == 1) {
-        b.add(b, a).xq()?.addIn(output)
-        a.add(a, b).xq()?.addIn(output)
-      } else {
+    .map((char) => {
+      for (const [a, b] of g.k().f(char).arr().c2()) {
         for (const [ax, bx] of [a, b].perms()) {
-          ints()
-            .mnn((n) => bx.add(bx.sub(ax).scale(n)).xq()?.addIn(output))
-            .run()
+          if (part == 1) {
+            bx.add(bx, ax).xq()?.addIn(output)
+          } else {
+            ints()
+              .mnn((n) => bx.add(bx.sub(ax).scale(n)).xq()?.addIn(output))
+              .run()
+          }
         }
       }
-    }
-  }
-
-  // same on both:
+    })
   return output.size
 }
 
