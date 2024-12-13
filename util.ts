@@ -640,7 +640,7 @@ Iterator.prototype.acc = function* (f, initial) {
   }
 }
 
-Iterator.prototype.counts = function* (f) {
+Iterator.prototype.enum = function* (f) {
   if (!f) {
     let v = 0
     for (const x of this) {
@@ -662,7 +662,7 @@ Iterator.prototype.counts = function* (f) {
   }
 }
 
-Iterator.prototype.fi = function (f) {
+Iterator.prototype.i = function (f) {
   let i = 0
   for (const v of this) {
     if (f.fnfilter(v, i)) {
@@ -1581,99 +1581,190 @@ declare global {
      * each element.
      */
     unique(key?: (x: T, i: number, a: T[]) => any): T[]
+    /** Returns `true` if any element returns `true`. */
     fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean
+    /** Generates all combinations of two elements. */
     choose2(): Generator<[x: T, y: T, xi: number, yi: number]>
+    /** Generates all combinations of two elements. */
     c2(): Generator<[x: T, y: T, xi: number, yi: number]>
+    /** Generates all permutations of this array. */
     perms(): Generator<{ [K in keyof this]: this[keyof this & number] }>
   }
 
   interface ReadonlyArray<T> extends ArrayBase<T> {}
 
   interface Array<T> extends ArrayBase<T> {
-    // created at the corresponding getter
+    /** Sets the last element of this array. */
     set last(v: T)
+    /** Sorts this array numerically. */
     s(this: number[]): number[]
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
+    /** Sums the elements of this iterator. */
     sum(this: IteratorObject<number | boolean>): number
+    /** Passes each element of this iterator to `f` and sums the results. */
     sum(f: (value: T, index: number, self: this) => number | boolean): number
+    /** Takes the product the elements of this iterator. */
     prod(this: IteratorObject<number | boolean>): number
+    /** Passes each element of this iterator to `f` and multiplies the results. */
     prod(f: (value: T, index: number, self: this) => number | boolean): number
+    /**
+     * Counts the number of elements which match `f`, or the number of elements
+     * at all if `f == null`.
+     */
     count(f?: FnFilter<T> | null): number
+    /**
+     * Like .reduce(), but yields every intermediate value (excluding
+     * `initial`).
+     */
     acc<U>(f: (a: U, b: T, index: number) => U, initial: U): IteratorObject<U>
-    counts(f?: FnFilter<T> | null): IteratorObject<[number, T], number, unknown>
-    fi(f: FnFilter<T>): number
+    /**
+     * Yields `[index, value]` tuples, optionally filtering by `f`. `f` is
+     * passed the original index, not the index after filtering.
+     */
+    enum(
+      f?: FnFilter<T> | null,
+    ): IteratorObject<[index: number, value: T], number, unknown>
+    /** Finds the first index whose value matches `f`. */
+    i(f: FnFilter<T>): number
+    /** Filters by `f`. */
     f(f: FnFilter<T>): IteratorObject<T>
+    /** Collects this iterator's values into an array. */
     arr(): T[]
+    /** Iterates over the Cartesian product of `this` and `other`. */
     by<U>(other: IteratorObject<U> | U[]): IteratorObject<[T, U]>
+    /** Equivalent to `.map(x => x[key])`. */
     key<K extends keyof T>(key: K): IteratorObject<T[K], undefined, unknown>
+    /**
+     * If this is an array of `[x,y]` tuples, returns an iterator over points
+     * representing those `(x,y)` pairs.
+     */
     xy(
       this: IteratorObject<[x: number, y: number], any, any>,
     ): IteratorObject<Point, any, any>
+    /**
+     * If this is an array of `[i][j]` tuples, returns an iterator over points
+     * representing those pairs.
+     */
     ij(
       this: IteratorObject<[i: number, j: number], any, any>,
     ): IteratorObject<Point, any, any>
+    /**
+     * A combination of `.filter()` and `.map()`, where the global `none` value
+     * (alias: `Symbol.none`) is used to skip the value in output.
+     */
     mu<U>(
       f: (value: T, index: number) => U | typeof none,
     ): Generator<Exclude<U, typeof none>, unknown, unknown>
+    /**
+     * A combination of `.filter()` and `.map()`, where `null` and `undefined`
+     * values are skipped in the output.
+     */
     mnn<U>(
       f: (value: T, index: number) => U | null | undefined,
     ): Generator<U & {}, unknown, unknown>
+    /** Runs this iterator to completion. */
     run(): void
   }
 
   interface Object {
+    /** Equivalent to `f(this)`. Useful for binding complex operations. */
     do<T, U>(this: T, f: (x: T) => U): U
+    /** Repeats `this` in an array `n` times. */
     r<T>(this: Extract<T, FnCopy>, n: number): T[]
   }
 
   interface Boolean {
+    /** Returns `this`. */
     c(): boolean
+    /**
+     * Returns `-1` if `false`. Otherwise, `1`. Useful for custom sorting
+     * functions, as in `.sort((a, b) => (a < b).s())`.
+     */
     s(): -1 | 1
   }
 
+  /** Creates an inclusive range `0..=max`. */
+  function ri(max: number, _?: undefined): Range
+  /** Creates an inclusive range `min..=max`. */
+  function ri(min: number, max: number): Range
+  /** Creates an inclusive range `0..=min` or `min..=max`. */
   function ri(min: number, max?: number): Range
+
+  /** Creates an exclusive range `0..max`. */
+  function rx(max: number, _?: undefined): Range
+  /** Creates an exclusive range `min..max`. */
+  function rx(min: number, max: number): Range
+  /** Creates an exclusive range `0..min` or `min..max`. */
   function rx(min: number, max?: number): Range
 
+  /** Gets today's year and date in AoC time. */
   function today(): [year: number, date: number]
+  /** Ensures the input for the specified date is cached. */
   function checkInput(year: number, date: number): Promise<void>
+  /** Gets the input for the specified date. */
   function input(year: number, date: number): string
+
+  /**
+   * Helper for creating tuples, as this usually requires `as const`, which
+   * isn't available in JS code.
+   */
   function t<T extends readonly any[]>(...args: T): Mut<T>
+  /**
+   * Helper for creating tuples, as this usually requires `as const`, which
+   * isn't available in JS code.
+   */
   function tuple<T extends readonly any[]>(...args: T): Mut<T>
 
+  /** Throws if `value` is `null` or `undefined`. Else, returns `value`. */
   function nn<T>(value: T): NonNullable<T>
+
+  /** Equivalent to x.mx(), but shorter for template strings. */
   function mx(
     x: string | TemplateStringsArray,
   ): [normal: string, reversed: string]
 
+  /** A set of points. */
   var PointSet: typeof __PointSet & {
     <T>(init?: Iterable<Point<T>>): PointSet<T>
   }
+  /** A set of points. */
   var ps: typeof PointSet
 
+  /** Creates a point. */
   var Point: typeof __Point & {
     <T>(x: number, y: number, z?: number | undefined, g?: Grid<T>): Point<T>
   }
+  /** Creates a point. */
   var point: typeof Point
+  /** Creates a point. */
   var pt: typeof Point
+  /** Creates a point. */
   var p: typeof Point
+  /** Creates a point. */
   var ij: typeof Point
+  /** A point. */
   type Point<T = unknown> = __Point<T>
 
+  /** Creates a grid. */
   var Grid: typeof __Grid & {
     <T>(rows?: T[][]): Grid<T>
     new <T>(rows?: T[][]): Grid<T>
   }
+  /** A grid. */
   type Grid<T> = __Grid<T>
 
+  /** An iterator over all positive integers. */
   var ints: {
     (): Generator<number, never, unknown>
     [Symbol.iterator](): Generator<number, never, unknown>
   }
   interface SymbolConstructor {
+    /** Represents the absence of a value. Used in `Iterator.prototype.mu`. */
     readonly none: unique symbol
   }
+  /** Represents the absence of a value. Used in `Iterator.prototype.mu`. */
   var none: typeof Symbol.none
 }
 
