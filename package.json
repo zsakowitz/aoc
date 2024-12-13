@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "go": "tsc util.ts --strict --noUncheckedIndexedAccess --moduleDetection force --lib esnext,esnext.iterator,dom --module esnext --skiplibcheck --target esnext --checkjs false"
+    "build": "tsc util.ts --strict --noUncheckedIndexedAccess --moduleDetection force --lib esnext,esnext.iterator,dom --module esnext --skiplibcheck --target esnext --checkjs false",
+    "test": "node index.js"
   },
   "dependencies": {
     "@types/node": "^22.10.1",
