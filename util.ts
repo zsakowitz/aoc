@@ -1471,49 +1471,115 @@ declare global {
   }
 
   interface ArrayBase<T> {
+    /** Returns a string created from `id`ing all nested objects. */
     id(this: { id(): string }[]): string
+    /** Equivalent to `.join("")` */
     readonly j: string
+    /** Returns `true` if any element matches `f`. */
     any(f: FnFilter<T>): boolean
+    /** Calls `.fncounttarget(source)` on each element, and returns the sum. */
     fncounttarget(this: readonly FnStrCountTarget[], source: string): number
+    /** Returns elements which match the filter `f`. */
     f(f: FnFilter<T>): T[]
+    /**
+     * Returns elements which match the filter `f`, but preserves indices by
+     * creating a sparse array.
+     */
     fi(f: FnFilter<T>): T[]
+    /** Shorthand for `.keys()`. */
     k(): IteratorObject<number>
+    /** Shorthand for `.values()`. */
     v(): IteratorObject<T>
+    /** Shorthand for `.indexOf()`. */
     i(v: T): number
+    /** Equivalent to `.map(x => x.int())`. */
     int(this: FnInt<any>[]): (T extends FnInt<infer U> ? U : never)[]
+    /** Returns the last element of this array. */
     get last(): T | X
+    /**
+     * Counts the number of elements which match `f`, or returns `this.length`
+     * if none match.
+     */
     count(f?: FnFilter<T> | null): number
+    /** Returns the sum of the values in this array. */
     sum(this: number[]): number
+    /** Passes each element to `f`, and sums the results. */
     sum(f: (value: T, index: number, self: this) => number): number
+    /** Returns the product of the values in this array. */
     prod(this: number[]): number
+    /** Passes each element to `f`, and multiplies the results. */
     prod(f: (value: T, index: number, self: this) => number): number
+    /** Takes the Cartesian product of `this` and `other`. */
     by<U>(other: IteratorObject<U> | U[]): [T, U][]
+    /**
+     * Equivalent to `.slice()`. Makes working with iterators easier because an
+     * extra `.toArray()` call will not throw an error.
+     */
     toArray(): T[]
+    /** Equivalent to `.map(x => x.sws())`. */
     sws(this: FnSws<any>[]): (T extends FnSws<infer U> ? U : never)[]
+    /** Equivalent to `.map(x => x.c())`. */
     c(this: FnCopy[]): T[]
+    /** Equivalent to `.map(x => x.on(...arguments))` */
     on(
       this: FnOn<any>[],
       on: string | TemplateStringsArray,
     ): (T extends FnOn<infer U> ? U : never)[][]
+    /** Transposes this array. */
     tx<T>(this: T[][]): T[][]
+    /** Returns all subarrays of length 1 in this array. */
     w(n: 1): [T][]
+    /** Returns all contiguous pairs in this array. */
     w(n: 2): [T, T][]
+    /** Returns all contiguous triplets in this array. */
     w(n: 3): [T, T, T][]
+    /** Returns all contiguous windows of `n` values in this array. */
     w(n: number): T[][]
+    /** Takes the signed difference between each pair of numbers. */
     sd(this: FnSd[]): T[]
+    /** Takes the unsigned difference between each pair of numbers. */
     ud(this: FnUd[]): T[]
+    /** Returns the middle element. */
     mid(): T | X
+    /** Equivalent to `.map(x => x[key])`. */
     key<K extends keyof T>(key: K): T[K][]
+    /**
+     * Copies this array, then removes the specified index and returns the new
+     * array.
+     */
     wo(index: number): T[]
+    /**
+     * Iterates over all indices of `this`, calling `.wo()` on each one and
+     * yielding the results.
+     *
+     *     ;["hi", "world", "bye"].woall().forEach(console.log)
+     *     // ["world", "bye"]
+     *     // ["hi", "bye"]
+     *     // ["hi", "world"]
+     */
     woall(): IteratorObject<T[]>
+    /**
+     * If this is an array of `[x,y]` tuples, returns an iterator over points
+     * representing those `(x,y)` pairs.
+     */
     xy(
       this: IteratorObject<[x: number, y: number], any, any>,
     ): IteratorObject<Point, any, any>
+    /**
+     * If this is an array of `[i][j]` tuples, returns an iterator over points
+     * representing those pairs.
+     */
     ij(
       this: IteratorObject<[i: number, j: number], any, any>,
     ): IteratorObject<Point, any, any>
+    /** Returns `true` if all elements match `f`. */
     all(f: FnFilter<T>): boolean
+    /** Returns `true` if for some `f` of `fs`, all elements match `f`. */
     allany(...fs: FnFilter<T>[]): boolean
+    /**
+     * Removes duplicates from the array, optionally using `key` as the key of
+     * each element.
+     */
     unique(key?: (x: T, i: number, a: T[]) => any): T[]
     fnfilter<T, I>(this: FnFilter<T, I>[], value: T, index: I): boolean
     choose2(): Generator<[x: T, y: T, xi: number, yi: number]>
