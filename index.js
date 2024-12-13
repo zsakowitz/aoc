@@ -1,34 +1,17 @@
+import { readFileSync, writeFileSync } from "node:fs"
 import { Worker, isMainThread, parentPort } from "node:worker_threads"
 import "./load.js"
 import "./util.js"
 
 if (isMainThread) {
-  const queued = [
-    "./2015/1.js",
-    "./2015/25.js",
+  const queued = Object.entries(JSON.parse(readFileSync("times.json", "utf8")))
+    .sort(([, a], [, b]) => b - a)
+    .map((x) => x[0])
 
-    "./2022/25.js",
+  const times = Object.create(null)
 
-    "./2023/1.js",
-    "./2023/2.js",
-    "./2023/3.js",
-
-    "./2024/1.js",
-    "./2024/2.js",
-    "./2024/3.js",
-    "./2024/4.js",
-    "./2024/5.js",
-    "./2024/6.js",
-    "./2024/7.js",
-    "./2024/8.js",
-    "./2024/9.js",
-    "./2024/10.js",
-    "./2024/11.js",
-    "./2024/12.js",
-    "./2024/13.js",
-  ]
-
-  for (let i = 0; i < 32; i++) {
+  for (let i = 0; i < 4; i++) {
+    let current = ""
     const worker = new Worker(new URL(import.meta.url))
     worker.addListener("message", enqueue)
     enqueue()
@@ -38,17 +21,33 @@ if (isMainThread) {
         process.exitCode = 1
         return
       }
+      times[current] = data
       if (queued.length === 0) {
         worker.postMessage("DONE")
       } else {
         const id = queued.pop()
-        setTimeout(() => worker.postMessage(id))
+        current = id
+        worker.postMessage(id)
       }
     }
   }
+
+  process.addListener("beforeExit", () => {
+    writeFileSync(
+      "times.json",
+      JSON.stringify(
+        Object.fromEntries(
+          Object.entries(times).sort(([a], [b]) => (a < b).s()),
+        ),
+        undefined,
+        2,
+      ),
+    )
+  })
 } else {
   parentPort.onmessage = async (data) => {
     if (data.data == "DONE") process.exit()
+    const start = Date.now()
     try {
       await import(data.data)
     } catch (e) {
@@ -56,6 +55,6 @@ if (isMainThread) {
       process.exitCode = 1
       parentPort.postMessage("err")
     }
-    parentPort.postMessage("done")
+    parentPort.postMessage(Date.now() - start)
   }
 }

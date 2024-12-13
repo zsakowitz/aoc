@@ -304,6 +304,21 @@ RegExp.prototype.fncounttarget = function (source) {
 RegExp.prototype.c = function () {
     return this;
 };
+Array.prototype.id = function () {
+    const inner = this.map((x) => x.id());
+    if (inner.some((x) => x.includes(";;;"))) {
+        return inner.join(";;;;");
+    }
+    else if (inner.some((x) => x.includes(";;"))) {
+        return inner.join(";;;");
+    }
+    else if (inner.some((x) => x.includes(";"))) {
+        return inner.join(";;");
+    }
+    else {
+        return inner.join(";");
+    }
+};
 Object.defineProperty(Array.prototype, "j", {
     configurable: true,
     get() {
@@ -502,7 +517,7 @@ Iterator.prototype.acc = function* (f, initial) {
         i++;
     }
 };
-Iterator.prototype.counts = function* (f) {
+Iterator.prototype.enum = function* (f) {
     if (!f) {
         let v = 0;
         for (const x of this) {
@@ -524,7 +539,7 @@ Iterator.prototype.counts = function* (f) {
         return v;
     }
 };
-Iterator.prototype.fi = function (f) {
+Iterator.prototype.i = function (f) {
     let i = 0;
     for (const v of this) {
         if (f.fnfilter(v, i)) {
@@ -848,14 +863,13 @@ class Point {
     id() {
         return `${this.x},${this.y},${this.z}`;
     }
-    /** Index in a grid like
+    /**
+     * Index in a grid like
      *
-     * ```
-     * 1 3 6 10
-     * 2 5 9
-     * 4 8
-     * 7
-     * ```
+     *     1 3 6 10
+     *     2 5 9
+     *     4 8
+     *     7
      */
     idxbrbrbr() {
         return ((this.y + this.x - 1) * (this.y + this.x - 2)) / 2 + this.x;
