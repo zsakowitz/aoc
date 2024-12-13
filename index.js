@@ -32,7 +32,11 @@ if (isMainThread) {
     worker.addListener("message", enqueue)
     enqueue()
 
-    function enqueue() {
+    function enqueue(data) {
+      if (data == "err") {
+        process.exitCode = 1
+        return
+      }
       if (queued.length === 0) {
         worker.postMessage("DONE")
       } else {
@@ -48,6 +52,8 @@ if (isMainThread) {
       await import(data.data)
     } catch (e) {
       console.error((e.stack || e.message).split("\n").slice(0, 5).join("\n"))
+      process.exitCode = 1
+      parentPort.postMessage("err")
     }
     parentPort.postMessage("done")
   }

@@ -181,10 +181,10 @@ declare global {
         fncounttarget(source: string): number;
         c(): RegExp;
     }
-    interface Array<T> {
-        j: string;
+    interface ArrayBase<T> {
+        readonly j: string;
         any(f: FnFilter<T>): boolean;
-        fncounttarget(this: FnStrCountTarget[], source: string): number;
+        fncounttarget(this: readonly FnStrCountTarget[], source: string): number;
         f(f: FnFilter<T>): T[];
         fi(f: FnFilter<T>): T[];
         k(): IteratorObject<number>;
@@ -192,7 +192,6 @@ declare global {
         i(v: T): number;
         int(this: FnInt<any>[]): (T extends FnInt<infer U> ? U : never)[];
         get last(): T | X;
-        set last(v: T);
         count(f?: FnFilter<T> | null): number;
         sum(this: number[]): number;
         sum(f: (value: T, index: number, self: this) => number): number;
@@ -210,7 +209,6 @@ declare global {
         w(n: number): T[][];
         sd(this: FnSd[]): T[];
         ud(this: FnUd[]): T[];
-        s(this: number[]): number[];
         mid(): T | X;
         key<K extends keyof T>(key: K): T[K][];
         wo(index: number): T[];
@@ -226,6 +224,12 @@ declare global {
         perms(): Generator<{
             [K in keyof this]: this[keyof this & number];
         }>;
+    }
+    interface ReadonlyArray<T> extends ArrayBase<T> {
+    }
+    interface Array<T> extends ArrayBase<T> {
+        set last(v: T);
+        s(this: number[]): number[];
     }
     interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
         sum(this: IteratorObject<number | boolean>): number;

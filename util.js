@@ -407,9 +407,6 @@ Array.prototype.sd = function () {
 Array.prototype.ud = function () {
     return this.w(2).map(([a, b]) => a.ud(b));
 };
-Array.prototype.s = function () {
-    return this.sort((a, b) => a - b);
-};
 Array.prototype.mid = function () {
     if (this.length % 2 != 1) {
         warn `Middle element of even-lengthed array does not exist.`;
@@ -482,6 +479,9 @@ Array.prototype.perms = function* () {
             yield rest.toSpliced(i, 0, this[0]);
         }
     }
+};
+Array.prototype.s = function () {
+    return this.sort((a, b) => a - b);
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
