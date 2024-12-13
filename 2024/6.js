@@ -25,7 +25,7 @@ function hasLoop(/** @type {ReturnType<string['grid']>} */ g) {
   let d = pt(0, -1)
 
   while (q.exists()) {
-    const id = q.id() + ";" + d.id()
+    const id = [q, d].id()
     if (ps.has(id)) return true
     ps.add(id)
 

@@ -392,6 +392,19 @@ RegExp.prototype.c = function () {
   return this
 }
 
+Array.prototype.id = function () {
+  const inner = this.map((x) => x.id())
+  if (inner.some((x) => x.includes(";;;"))) {
+    return inner.join(";;;;")
+  } else if (inner.some((x) => x.includes(";;"))) {
+    return inner.join(";;;")
+  } else if (inner.some((x) => x.includes(";"))) {
+    return inner.join(";;")
+  } else {
+    return inner.join(";")
+  }
+}
+
 Object.defineProperty(Array.prototype, "j", {
   configurable: true,
   get() {
@@ -1062,14 +1075,13 @@ class Point<T = unknown> {
     return `${this.x},${this.y},${this.z}`
   }
 
-  /** Index in a grid like
+  /**
+   * Index in a grid like
    *
-   * ```
-   * 1 3 6 10
-   * 2 5 9
-   * 4 8
-   * 7
-   * ```
+   *     1 3 6 10
+   *     2 5 9
+   *     4 8
+   *     7
    */
   idxbrbrbr() {
     return ((this.y + this.x - 1) * (this.y + this.x - 2)) / 2 + this.x
@@ -1296,77 +1308,170 @@ type Mut<T> = { -readonly [K in keyof T]: T[K] }
 
 declare global {
   interface Number {
+    /** Returns this number. */
     int(): number
+    /** Concatenates the integers `this` and `other`. */
     concat(other: number): number
+    /** Returns `true` if `x` is `this` or a point with matching value. */
     fnfilter(x: number | Point<number>): boolean
+    /** Checks this number against an expected value, throwing on error. */
     check(expected: number): number
+    /** Returns `this + 1`. */
     inc(): number
+    /** Returns `this - 1`. */
     dec(): number
+    /** Returns a copied version of `this`. */
     c(): number
+    /** Computes the signed difference `this - other`. */
     sd(other: number): number
+    /** Computes the unsigned difference `|this - other|`. */
     ud(other: number): number
+    /** Checks whether this number matches the passed filter. */
     is(x: FnFilter<number, undefined>): boolean
+    /** Returns this number, clamped between `min` and `max`. */
     clamp(min: number, max: number): number
+    /** Returns the minimum of `this` and its arguments. */
     min(...others: number[]): number
+    /** Returns the maximum of `this` and its arguments. */
     max(...others: number[]): number
+    /** Returns a list of numbers 0 to `this`. */
     fnasnumberbase(): string[]
+    /** If `this == -1`, returns `f()`. Otherwise, returns `this`. */
     m1<T>(f: () => T): number | T
+    /** Writes this number in a balanced base system. */
     nbal(base: FnAsNumberBase): string
+    /** Returns the `this`th capture group from the passed regex. */
     fnregexcapture(x: RegExpExecArray): string | X
   }
 
   interface String {
+    /** Parses this string as a number. */
     int(): number
+    /** Returns any integers in `this`. */
     ints(): number[]
+    /** Returns `true` if `x` is `this` or a point with matching value. */
     fnfilter(x: string | Point<string>): boolean
+    /** Counts the number of occurrences of `f` in `this`. */
     count(f: FnStrCountTarget): number
+    /** Counts the number of occurrences of `this` in `source`. */
     fncounttarget(source: string): number
+    /** Splits this string on every character. */
     chars(): string[]
+    /** Splits this string on every newline. */
     lines(): string[]
+    /** Makes a grid of characters in this string. */
     grid(): Grid<string>
+    /** Splits this string on any whitespace. */
     sws(): string[]
+    /** Copies this string. */
     c(): string
+    /** Splits this string on every `label`. */
     on(label: string | TemplateStringsArray): string[]
+    /** Checks if this string matches the passed filter. */
     is(x: FnFilter<string, undefined>): boolean
+    /** Splits this string at the given index. */
     xat(i: number): [string, string]
+    /** Splits this string into two strings of equal length. */
     xmid(): [string, string]
+    /**
+     * Parses this string in some base where the first digit means `offset`.
+     *
+     * For instance, `.nb("-01", -2)` parses in balanced ternary, and `.nb(5,
+     * 0)` parses in base 5.
+     */
     nb(digits: FnAsNumberBase, offset: number): number
+    /** Returns the characters in this string. */
     fnasnumberbase(): string[]
+    /**
+     * Checks that this string matches `expected`, throwing on error.
+     *
+     * Will warn without `confirmation`, as string results are not typical of
+     * AoC.
+     */
     check(expected: string, confirmation: "YESIMSURE"): string
+    /** Returns all matches of the given global `RegExp`. */
     mall(regex: RegExp): string[]
+    /** Returns this string and its reversed counterpart. */
     mx(): [normal: string, reversed: string]
+    /** Reverses this string. */
     rev(): string
+    /** Reverses this string. */
     reverse(): string
+    /** Transposes this string's lines and character columns. */
     tx(): string
+    /**
+     * Matches `this` against `regex`, returning the capturing groups of the
+     * first match.
+     */
     cap(regex: RegExp): string[] | X
+    /** Matches `this` against `regex`, returning the result specified by `cap`. */
     cap<T>(regex: RegExp, cap: FnRegexCapture<T>): T | X
+    /** Matches `this` against `regex`, returning all capturing groups. */
     caps(regex: RegExp): string[][]
+    /**
+     * Matches `this` against `regex`, passing all match results to `cap` and
+     * forwarding the return values.
+     */
     caps<T>(regex: RegExp, cap: FnRegexCapture<T>): T[]
+    /**
+     * If `this` is `zero`, `one`, or another lowercase number digit, returns
+     * that value. Otherwise, parses `this` as a number.
+     */
     digitname(): number
+    /** Returns all digits in this string. */
     digits(): number[]
+    /**
+     * Returns all digits or digit names in this string, starting from the
+     * front.
+     *
+     * `twone` becomes `[2]`.
+     */
     digitnamesfwd(): number[]
+    /**
+     * Returns all digits or digit names in this string, starting from the back.
+     *
+     * `twone` becomes `[1]`.
+     */
     digitnamesrev(): number[]
   }
 
   interface Function {
+    /** Calls `this` with the provided arguments. */
     fnfilter<T, I>(this: (x: T, i: I) => boolean, x: T, i: I): boolean
+    /** Returns `this`. */
     c<T>(this: T): T
+    /**
+     * Returns a new function which returns the boolean negation of `this`'s
+     * return value when passed the same parameters.
+     *
+     *     const hi = (a) => a > 23
+     *     hi(19) // false
+     *     hi(35) // true
+     *     const inv = hi.inv()
+     *     inv(19) // true
+     *     inv(35) // false
+     */
     inv<F extends (...args: any[]) => any>(
       this: F,
     ): (this: ThisParameterType<F>, ...args: Parameters<F>) => boolean
+    /** Calls `this` with the provided arguments. */
     fnregexcapture<T extends (x: RegExpExecArray) => any>(
       this: T,
       x: RegExpExecArray,
-    ): T extends (...args: any[]) => infer T ? T : never
+    ): ReturnType<T>
   }
 
   interface RegExp {
+    /** Returns `true` if `x` matches `this`. */
     fnfilter(x: string): boolean
+    /** Counts the number of instances of `this` in `source`. */
     fncounttarget(source: string): number
+    /** Returns `this`. */
     c(): RegExp
   }
 
   interface ArrayBase<T> {
+    id(this: { id(): string }[]): string
     readonly j: string
     any(f: FnFilter<T>): boolean
     fncounttarget(this: readonly FnStrCountTarget[], source: string): number
