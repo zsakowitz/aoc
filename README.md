@@ -1,13 +1,11 @@
-[util.js](util.js) is the utility library.
+[util.ts](util.ts) is the utility library. It is built into [util.js](util.js), and has type declarations available in [util.d.ts](util.d.ts).
 
-[index.js](index.js) runs each file in parallel. If a file name isn't in the
-`queued` array of the `index.js` file, it isn't complete and may not give
-correct results.
+[index.js](index.js) runs each file in parallel. The list of files it runs are in [times.json](times.json), which also includes the last time in milliseconds it took to run the test cases.
 
 **Do not use an individual day's test case as a standard for comparison unless
-it is in the `index.js` file.**
+it is in the `times.json` file.**
 
-The `.check()` function from `util.js` ensures a result is correct. The answers
+The `.check()` function from `util.ts` ensures a result is correct. The answers
 are hardcoded to my inputs, and will likely fail on your inputs, as inputs may
 be different for each person.
 
