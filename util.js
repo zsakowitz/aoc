@@ -49,6 +49,12 @@ const warn = (() => {
         }
     };
 })();
+Number.prototype.imod = function (divisor) {
+    if (divisor <= 0) {
+        warn `.imod(${divisor}) divides by a nonpositive number.`;
+    }
+    return ((this % divisor) + divisor) % divisor;
+};
 Number.prototype.int = function () {
     return +this;
 };

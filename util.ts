@@ -61,6 +61,13 @@ const warn = (() => {
   }
 })()
 
+Number.prototype.imod = function (this: number, divisor) {
+  if (divisor <= 0) {
+    warn`.imod(${divisor}) divides by a nonpositive number.`
+  }
+  return ((this % divisor) + divisor) % divisor
+}
+
 Number.prototype.int = function () {
   return +this
 }
@@ -1308,6 +1315,11 @@ type Mut<T> = { -readonly [K in keyof T]: T[K] }
 
 declare global {
   interface Number {
+    /**
+     * Takes the standard modulus, where negatives are wrapped up. `divisor`
+     * should be positive.
+     */
+    imod(divisor: number): number
     /** Returns this number. */
     int(): number
     /** Concatenates the integers `this` and `other`. */

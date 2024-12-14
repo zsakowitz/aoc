@@ -119,6 +119,11 @@ type Mut<T> = {
 };
 declare global {
     interface Number {
+        /**
+         * Takes the standard modulus, where negatives are wrapped up. `divisor`
+         * should be positive.
+         */
+        imod(divisor: number): number;
         /** Returns this number. */
         int(): number;
         /** Concatenates the integers `this` and `other`. */
