@@ -1097,6 +1097,10 @@ class Point<T = unknown> {
   get v(): T | X {
     return this.g!.at(this)
   }
+
+  set v(v: T) {
+    this.g!.set(this, v)
+  }
 }
 
 class PointSet<T = unknown> {
@@ -1105,9 +1109,27 @@ class PointSet<T = unknown> {
   constructor(input?: Iterable<Point<T>>) {
     if (input != null) {
       for (const x of input) {
-        this.pts.set(x.id(), x)
+        this.add(x)
       }
     }
+  }
+
+  c(): PointSet<T> {
+    return new PointSet(this.pts.values())
+  }
+
+  lt() {
+    return this.k().reduce(
+      (a, b) => (b.x < a.x || b.y < a.y ? b : a),
+      pt(Infinity, Infinity),
+    )
+  }
+
+  rb() {
+    return this.k().reduce(
+      (a, b) => (b.x > a.x || b.y > a.y ? b : a),
+      pt(-Infinity, -Infinity),
+    )
   }
 
   clear() {
@@ -1115,6 +1137,7 @@ class PointSet<T = unknown> {
   }
 
   add(pt: Point<T>) {
+    if (this.pts.has(pt.id())) return
     this.pts.set(pt.id(), pt)
   }
 
@@ -1184,6 +1207,28 @@ globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
 class Grid<T> {
   constructor(readonly rows: T[][]) {}
 
+  slice(a: Point, b: Point): Grid<T> {
+    if (this.rows.length == 0) return new Grid([])
+    let i1 = a.i
+    let j1 = a.j
+    let i2 = b.i
+    let j2 = b.j
+    // if (i1 < 0) i1 = this.rows.length + i1
+    // if (i2 < 0) i2 = this.rows.length + i2
+    // if (j1 < 0) warn`negative columns not supported`
+    // if (j2 < 0) warn`negative columns not supported`
+    // if (i2 < i1) [i1, i2] = [i2, i1]
+    // if (j2 < j1) [j1, j2] = [j2, j1]
+    return new Grid(
+      this.rows.slice(i1, i2 + 1).map((row) => row.slice(j1, j2 + 1)),
+    )
+  }
+
+  log() {
+    console.log(this.rows.map((x) => x.j).join("\n"))
+    return this
+  }
+
   diag(pt: Point, x: number, y: number) {
     if (Math.abs(x) != Math.abs(y)) {
       throw new Error("Called .diag() with values of different sizes")
@@ -1231,6 +1276,11 @@ class Grid<T> {
 
   at(pt: Point): T | X {
     return this.rows[pt.y]?.[pt.x]!
+  }
+
+  set(pt: Point, value: T): T {
+    this.rows[pt.i]![pt.j] = value
+    return value
   }
 
   *k(): IteratorObject<Point<T>, undefined> {

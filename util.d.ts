@@ -49,10 +49,14 @@ declare class Point<T = unknown> {
      */
     idxbrbrbr(): number;
     get v(): T | X;
+    set v(v: T);
 }
 declare class PointSet<T = unknown> {
     pts: Map<string, Point<T>>;
     constructor(input?: Iterable<Point<T>>);
+    c(): PointSet<T>;
+    lt(): Point<T>;
+    rb(): Point<T>;
     clear(): void;
     add(pt: Point<T>): void;
     delete(pt: Point<T>): boolean;
@@ -67,12 +71,15 @@ declare class PointSet<T = unknown> {
 declare class Grid<T> {
     readonly rows: T[][];
     constructor(rows: T[][]);
+    slice(a: Point, b: Point): Grid<T>;
+    log(): this;
     diag(pt: Point, x: number, y: number): (T | undefined)[];
     has(pt: Point): boolean;
     int<U>(this: Grid<FnInt<U>>): Grid<T extends FnInt<infer U> ? U : never>;
     tx(): Grid<T>;
     row(i: number, start?: number, end?: number): T[] | X;
     at(pt: Point): T | X;
+    set(pt: Point, value: T): T;
     k(): IteratorObject<Point<T>, undefined>;
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;

@@ -883,20 +883,34 @@ class Point {
     get v() {
         return this.g.at(this);
     }
+    set v(v) {
+        this.g.set(this, v);
+    }
 }
 class PointSet {
     pts = new Map();
     constructor(input) {
         if (input != null) {
             for (const x of input) {
-                this.pts.set(x.id(), x);
+                this.add(x);
             }
         }
+    }
+    c() {
+        return new PointSet(this.pts.values());
+    }
+    lt() {
+        return this.k().reduce((a, b) => (b.x < a.x || b.y < a.y ? b : a), pt(Infinity, Infinity));
+    }
+    rb() {
+        return this.k().reduce((a, b) => (b.x > a.x || b.y > a.y ? b : a), pt(-Infinity, -Infinity));
     }
     clear() {
         this.pts.clear();
     }
     add(pt) {
+        if (this.pts.has(pt.id()))
+            return;
         this.pts.set(pt.id(), pt);
     }
     delete(pt) {
@@ -952,6 +966,25 @@ class Grid {
     constructor(rows) {
         this.rows = rows;
     }
+    slice(a, b) {
+        if (this.rows.length == 0)
+            return new Grid([]);
+        let i1 = a.i;
+        let j1 = a.j;
+        let i2 = b.i;
+        let j2 = b.j;
+        // if (i1 < 0) i1 = this.rows.length + i1
+        // if (i2 < 0) i2 = this.rows.length + i2
+        // if (j1 < 0) warn`negative columns not supported`
+        // if (j2 < 0) warn`negative columns not supported`
+        // if (i2 < i1) [i1, i2] = [i2, i1]
+        // if (j2 < j1) [j1, j2] = [j2, j1]
+        return new Grid(this.rows.slice(i1, i2 + 1).map((row) => row.slice(j1, j2 + 1)));
+    }
+    log() {
+        console.log(this.rows.map((x) => x.j).join("\n"));
+        return this;
+    }
     diag(pt, x, y) {
         if (Math.abs(x) != Math.abs(y)) {
             throw new Error("Called .diag() with values of different sizes");
@@ -999,6 +1032,10 @@ class Grid {
     }
     at(pt) {
         return this.rows[pt.y]?.[pt.x];
+    }
+    set(pt, value) {
+        this.rows[pt.i][pt.j] = value;
+        return value;
     }
     *k() {
         for (let i = 0; i < this.rows.length; i++) {
