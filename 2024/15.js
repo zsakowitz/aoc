@@ -2,20 +2,7 @@ import "../util.js"
 
 const i0 = input(2024, 15).split("\n\n")
 const g = i0[0].grid()
-const ss = i0[1]
-  .chars()
-  .map((x) =>
-    x == "^"
-      ? pt(0, -1)
-      : x == ">"
-        ? pt(1, 0)
-        : x == "<"
-          ? pt(-1, 0)
-          : x == "v"
-            ? pt(0, 1)
-            : null,
-  )
-  .filter((x) => x != null)
+const ss = i0[1].dirs()
 for (const d of ss) {
   const p = nn(g.k().find((k) => k.v == "@"))
   let q = p.c()
@@ -46,13 +33,13 @@ g.k()
   const [gridSource, movesSource] = input(2024, 15).split("\n\n")
 
   let g = gridSource
-    .replaceAll("#", "##")
-    .replaceAll("O", "[]")
-    .replaceAll(".", "..")
-    .replaceAll("@", "@.")
+    .ra("#", "##")
+    .ra("O", "[]")
+    .ra(".", "..")
+    .ra("@", "@.")
     .grid()
 
-  const m = movesSource.chars().mnn((char) => char.dir())
+  const m = movesSource.dirs()
 
   function lr(/** @type {Point} */ d) {
     const p = g.i("@")

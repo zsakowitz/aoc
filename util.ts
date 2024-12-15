@@ -184,6 +184,14 @@ String.prototype.dir = function (this: string) {
   }[this]
 }
 
+String.prototype.dirs = function (this: string) {
+  return this.chars().mnn((x) => x.dir())
+}
+
+String.prototype.ra = function (s, r) {
+  return this.replaceAll(s, r as any)
+}
+
 String.prototype.fnfilter = function (n) {
   return n === this || (n instanceof Point && !!n.g && n.v === this)
 }
@@ -1470,6 +1478,16 @@ declare global {
     ints(): number[]
     /** Parses this string as a direction `^` `<` `>` `v`. */
     dir(): Point | undefined
+    /**
+     * Returns `.dir()` called on all instances of `^` `<` `>` `v` in this
+     * string.
+     */
+    dirs(): Point[]
+    /** Alias for `.replaceAll()`. */
+    ra(
+      searchValue: string | RegExp,
+      replacer: string | ((source: string, ...args: any[]) => string),
+    ): string
     /** Returns `true` if `x` is `this` or a point with matching value. */
     fnfilter(x: string | Point<string>): boolean
     /** Counts the number of occurrences of `f` in `this`. */
