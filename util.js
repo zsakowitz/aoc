@@ -138,6 +138,14 @@ String.prototype.int = function () {
 String.prototype.ints = function () {
     return this.match(/\d+/g)?.map((x) => +x) ?? [];
 };
+String.prototype.dir = function () {
+    return {
+        "^": pt(0, -1),
+        "<": pt(-1, 0),
+        ">": pt(+1, 0),
+        v: pt(0, 1),
+    }[this];
+};
 String.prototype.fnfilter = function (n) {
     return n === this || (n instanceof Point && !!n.g && n.v === this);
 };
@@ -309,6 +317,9 @@ RegExp.prototype.fncounttarget = function (source) {
 };
 RegExp.prototype.c = function () {
     return this;
+};
+Array.prototype.mnn = function (f) {
+    return this.map(f).filter((x) => x != null);
 };
 Array.prototype.id = function () {
     const inner = this.map((x) => x.id());
@@ -818,32 +829,32 @@ class Point {
     c() {
         return new Point(this.x, this.y, this.z, this.g);
     }
-    t() {
+    get t() {
         return new Point(this.x, this.y - 1, this.z, this.g);
     }
-    l() {
+    get l() {
         return new Point(this.x - 1, this.y, this.z, this.g);
     }
-    b() {
+    get b() {
         return new Point(this.x, this.y + 1, this.z, this.g);
     }
-    r() {
+    get r() {
         return new Point(this.x + 1, this.y, this.z, this.g);
     }
-    lt() {
+    get lt() {
         return new Point(this.x - 1, this.y - 1, this.z, this.g);
     }
-    rt() {
+    get rt() {
         return new Point(this.x + 1, this.y - 1, this.z, this.g);
     }
-    lb() {
+    get lb() {
         return new Point(this.x - 1, this.y + 1, this.z, this.g);
     }
-    rb() {
+    get rb() {
         return new Point(this.x + 1, this.y + 1, this.z, this.g);
     }
     n() {
-        return [this.t(), this.r(), this.b(), this.l()];
+        return [this.t, this.r, this.b, this.l];
     }
     nf() {
         if (!this.g) {
@@ -933,18 +944,15 @@ class PointSet {
     }
     perim() {
         return this.k().sum((p) => {
-            return (+!this.has(p.t()) +
-                +!this.has(p.b()) +
-                +!this.has(p.l()) +
-                +!this.has(p.r()));
+            return (+!this.has(p.t) + +!this.has(p.b) + +!this.has(p.l) + +!this.has(p.r));
         });
     }
     edges() {
         return this.k().sum((p) => {
-            return (+!(this.has(p.l()) || (this.has(p.t()) && !this.has(p.lt()))) +
-                +!(this.has(p.r()) || (this.has(p.t()) && !this.has(p.rt()))) +
-                +!(this.has(p.t()) || (this.has(p.l()) && !this.has(p.lt()))) +
-                +!(this.has(p.b()) || (this.has(p.l()) && !this.has(p.lb()))));
+            return (+!(this.has(p.l) || (this.has(p.t) && !this.has(p.lt))) +
+                +!(this.has(p.r) || (this.has(p.t) && !this.has(p.rt))) +
+                +!(this.has(p.t) || (this.has(p.l) && !this.has(p.lt))) +
+                +!(this.has(p.b) || (this.has(p.l) && !this.has(p.lb))));
         });
     }
 }
@@ -965,6 +973,12 @@ class Grid {
     rows;
     constructor(rows) {
         this.rows = rows;
+    }
+    indexOf(el) {
+        return this.k().find((x) => x.v == el);
+    }
+    i(el) {
+        return this.indexOf(el);
     }
     slice(a, b) {
         if (this.rows.length == 0)
@@ -1056,6 +1070,43 @@ class Grid {
     }
     c() {
         return new Grid(this.rows.c());
+    }
+    copyFrom(other) {
+        this.rows = other.rows.c();
+    }
+    draw() {
+        const rows = this.map((t) => {
+            const s = document.createElement("span");
+            s.textContent = t;
+            s.style.color =
+                {
+                    "#": "black",
+                    "[": "brown",
+                    "]": "brown",
+                    ".": "#c0c0c0",
+                    "@": "white",
+                }[t] || "currentcolor";
+            s.style.backgroundColor =
+                {
+                    "@": "blue",
+                }[t] || "transparent";
+            return s;
+        }).rows.map((row) => {
+            const p = document.createElement("span");
+            p.append(...row);
+            return p;
+        });
+        const el = document.createElement("pre");
+        for (const [i, row] of rows.entries()) {
+            if (i != 0)
+                el.append("\n");
+            el.append(row);
+        }
+        el.id = "grid";
+        const existing = document.getElementById("grid");
+        if (existing)
+            existing.replaceWith(el);
+        document.body.append(el);
     }
 }
 globalThis.Grid = function (rows = []) {

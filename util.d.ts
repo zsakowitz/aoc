@@ -23,14 +23,14 @@ declare class Point<T = unknown> {
     drt(s: number): (T | undefined)[];
     dlb(s: number): (T | undefined)[];
     c(): Point<T>;
-    t(): Point<T>;
-    l(): Point<T>;
-    b(): Point<T>;
-    r(): Point<T>;
-    lt(): Point<T>;
-    rt(): Point<T>;
-    lb(): Point<T>;
-    rb(): Point<T>;
+    get t(): Point<T>;
+    get l(): Point<T>;
+    get b(): Point<T>;
+    get r(): Point<T>;
+    get lt(): Point<T>;
+    get rt(): Point<T>;
+    get lb(): Point<T>;
+    get rb(): Point<T>;
     n(): Point<T>[];
     nf(): Point<T>[];
     add(other: Point, from?: Point): Point<T>;
@@ -69,8 +69,10 @@ declare class PointSet<T = unknown> {
     edges(): number;
 }
 declare class Grid<T> {
-    readonly rows: T[][];
+    rows: T[][];
     constructor(rows: T[][]);
+    indexOf(el: T): Point<T> | X;
+    i(el: T): Point<T> | undefined;
     slice(a: Point, b: Point): Grid<T>;
     log(): this;
     diag(pt: Point, x: number, y: number): (T | undefined)[];
@@ -84,6 +86,8 @@ declare class Grid<T> {
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;
     c(this: Grid<T & FnCopy>): Grid<T>;
+    copyFrom(other: Grid<T>): void;
+    draw(this: Grid<string>): void;
 }
 declare var __Point: typeof Point;
 type __Point<T> = Point<T>;
@@ -171,6 +175,8 @@ declare global {
         int(): number;
         /** Returns any integers in `this`. */
         ints(): number[];
+        /** Parses this string as a direction `^` `<` `>` `v`. */
+        dir(): Point | undefined;
         /** Returns `true` if `x` is `this` or a point with matching value. */
         fnfilter(x: string | Point<string>): boolean;
         /** Counts the number of occurrences of `f` in `this`. */
@@ -285,6 +291,8 @@ declare global {
         c(): RegExp;
     }
     interface ArrayBase<T> {
+        /** Equivalent to `.map(f).filter(x => x != null)`. */
+        mnn<U>(f: (value: T, index: number, array: T) => U): NonNullable<U>[];
         /** Returns a string created from `id`ing all nested objects. */
         id(this: {
             id(): string;

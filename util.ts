@@ -175,6 +175,15 @@ String.prototype.ints = function () {
   return this.match(/\d+/g)?.map((x) => +x) ?? []
 }
 
+String.prototype.dir = function (this: string) {
+  return {
+    "^": pt(0, -1),
+    "<": pt(-1, 0),
+    ">": pt(+1, 0),
+    v: pt(0, 1),
+  }[this]
+}
+
 String.prototype.fnfilter = function (n) {
   return n === this || (n instanceof Point && !!n.g && n.v === this)
 }
@@ -397,6 +406,10 @@ RegExp.prototype.fncounttarget = function (source) {
 
 RegExp.prototype.c = function () {
   return this
+}
+
+Array.prototype.mnn = function (f) {
+  return this.map(f).filter((x) => x != null)
 }
 
 Array.prototype.id = function () {
@@ -1005,40 +1018,40 @@ class Point<T = unknown> {
     return new Point(this.x, this.y, this.z, this.g)
   }
 
-  t() {
+  get t() {
     return new Point(this.x, this.y - 1, this.z, this.g)
   }
 
-  l() {
+  get l() {
     return new Point(this.x - 1, this.y, this.z, this.g)
   }
 
-  b() {
+  get b() {
     return new Point(this.x, this.y + 1, this.z, this.g)
   }
 
-  r() {
+  get r() {
     return new Point(this.x + 1, this.y, this.z, this.g)
   }
 
-  lt() {
+  get lt() {
     return new Point(this.x - 1, this.y - 1, this.z, this.g)
   }
 
-  rt() {
+  get rt() {
     return new Point(this.x + 1, this.y - 1, this.z, this.g)
   }
 
-  lb() {
+  get lb() {
     return new Point(this.x - 1, this.y + 1, this.z, this.g)
   }
 
-  rb() {
+  get rb() {
     return new Point(this.x + 1, this.y + 1, this.z, this.g)
   }
 
   n() {
-    return [this.t(), this.r(), this.b(), this.l()]
+    return [this.t, this.r, this.b, this.l]
   }
 
   nf() {
@@ -1168,10 +1181,7 @@ class PointSet<T = unknown> {
   perim() {
     return this.k().sum((p) => {
       return (
-        +!this.has(p.t()) +
-        +!this.has(p.b()) +
-        +!this.has(p.l()) +
-        +!this.has(p.r())
+        +!this.has(p.t) + +!this.has(p.b) + +!this.has(p.l) + +!this.has(p.r)
       )
     })
   }
@@ -1179,10 +1189,10 @@ class PointSet<T = unknown> {
   edges() {
     return this.k().sum((p) => {
       return (
-        +!(this.has(p.l()) || (this.has(p.t()) && !this.has(p.lt()))) +
-        +!(this.has(p.r()) || (this.has(p.t()) && !this.has(p.rt()))) +
-        +!(this.has(p.t()) || (this.has(p.l()) && !this.has(p.lt()))) +
-        +!(this.has(p.b()) || (this.has(p.l()) && !this.has(p.lb())))
+        +!(this.has(p.l) || (this.has(p.t) && !this.has(p.lt))) +
+        +!(this.has(p.r) || (this.has(p.t) && !this.has(p.rt))) +
+        +!(this.has(p.t) || (this.has(p.l) && !this.has(p.lt))) +
+        +!(this.has(p.b) || (this.has(p.l) && !this.has(p.lb)))
       )
     })
   }
@@ -1205,7 +1215,15 @@ globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
 }, Point) as any
 
 class Grid<T> {
-  constructor(readonly rows: T[][]) {}
+  constructor(public rows: T[][]) {}
+
+  indexOf(el: T) {
+    return this.k().find((x) => x.v == el) as Point<T> | X
+  }
+
+  i(el: T) {
+    return this.indexOf(el)
+  }
 
   slice(a: Point, b: Point): Grid<T> {
     if (this.rows.length == 0) return new Grid([])
@@ -1307,6 +1325,45 @@ class Grid<T> {
 
   c(this: Grid<T & FnCopy>): Grid<T> {
     return new Grid(this.rows.c())
+  }
+
+  copyFrom(other: Grid<T>) {
+    this.rows = other.rows.c()
+  }
+
+  draw(this: Grid<string>) {
+    const rows = this.map((t) => {
+      const s = document.createElement("span")
+      s.textContent = t
+      s.style.color =
+        {
+          "#": "black",
+          "[": "brown",
+          "]": "brown",
+          ".": "#c0c0c0",
+          "@": "white",
+        }[t] || "currentcolor"
+      s.style.backgroundColor =
+        {
+          "@": "blue",
+        }[t] || "transparent"
+      return s
+    }).rows.map((row) => {
+      const p = document.createElement("span")
+      p.append(...row)
+      return p
+    })
+
+    const el = document.createElement("pre")
+    for (const [i, row] of rows.entries()) {
+      if (i != 0) el.append("\n")
+      el.append(row)
+    }
+    el.id = "grid"
+
+    const existing = document.getElementById("grid")
+    if (existing) existing.replaceWith(el)
+    document.body.append(el)
   }
 }
 
@@ -1411,6 +1468,8 @@ declare global {
     int(): number
     /** Returns any integers in `this`. */
     ints(): number[]
+    /** Parses this string as a direction `^` `<` `>` `v`. */
+    dir(): Point | undefined
     /** Returns `true` if `x` is `this` or a point with matching value. */
     fnfilter(x: string | Point<string>): boolean
     /** Counts the number of occurrences of `f` in `this`. */
@@ -1533,6 +1592,8 @@ declare global {
   }
 
   interface ArrayBase<T> {
+    /** Equivalent to `.map(f).filter(x => x != null)`. */
+    mnn<U>(f: (value: T, index: number, array: T) => U): NonNullable<U>[]
     /** Returns a string created from `id`ing all nested objects. */
     id(this: { id(): string }[]): string
     /** Equivalent to `.join("")` */
