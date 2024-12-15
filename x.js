@@ -21,54 +21,68 @@ const g = i0[0]
 function go(/** @type {Point} */ d) {
   const p = nn(g.k().find((k) => k.v == "@"))
   if (d.x) {
-    let q = p.c()
-    let i = 0
-    while (true) {
-      const n = q.add(d)
-      if (n.v == "#" || n.v == ".") {
-        break
+    try {
+      console.log("horiz")
+      g.log()
+      let q = p.c()
+      let i = 0
+      while (true) {
+        const n = q.add(d)
+        if (n.v == "#" || n.v == ".") {
+          break
+        }
+        q = n
+        i++
       }
-      q = n
-      i++
-    }
-    if (q.add(d).v == "#") {
+      if (q.add(d).v == "#") {
+        return
+      }
+      for (let j = i; j >= 0; j--) {
+        const a = p.add(d.scale(j))
+        const b = p.add(d.scale(j + 1))
+        b.v = a.v
+      }
+      p.v = "."
       return
-    }
-    for (let j = i; j >= 0; j--) {
-      const a = p.add(d.scale(j))
-      const b = p.add(d.scale(j + 1))
-      b.v = a.v
-    }
-    p.v = "."
-    return
-  }
-  const b = ps()
-  if (p.add(d).v == "[") b.add(p.add(d))
-  else if (p.add(d).v == "]") b.add(p.add(d).l())
-  while (true) {
-    let lastSize = b.size
-    for (const k of b.k().toArray()) {
-      if (k.add(d).v == "[") b.add(k.add(d))
-      else if (k.add(d).v == "]") b.add(k.add(d).l())
-      if (k.r().add(d).v == "[") b.add(k.r().add(d))
-    }
-    if (b.size == lastSize) break
-  }
-  for (const a of b.k().toArray().toReversed()) {
-    if (a.v != "[") {
-      console.log("issue")
-    }
-    const b = a.r()
-    if (a.add(d).v == "." && b.add(d).v == ".") {
-      a.add(d).v = "["
-      b.add(d).v = "]"
-      a.v = "."
-      b.v = "."
+    } finally {
+      console.log("--")
+      g.log()
     }
   }
-  if (p.add(d).v == ".") {
-    p.v = "."
-    p.add(d).v = "@"
+  console.log("vert " + (d.y == 1 ? "down" : "up"))
+  g.log()
+  try {
+    const b = ps()
+    if (p.add(d).v == "[") b.add(p.add(d))
+    else if (p.add(d).v == "]") b.add(p.add(d).l())
+    while (true) {
+      let lastSize = b.size
+      for (const k of b.k().toArray()) {
+        if (k.add(d).v == "[") b.add(k.add(d))
+        else if (k.add(d).v == "]") b.add(k.add(d).l())
+        if (k.r().add(d).v == "[") b.add(k.r().add(d))
+      }
+      if (b.size == lastSize) break
+    }
+    for (const a of b.k().toArray().toReversed()) {
+      if (a.v != "[") {
+        console.log("issue")
+      }
+      const b = a.r()
+      if (a.add(d).v == "." && b.add(d).v == ".") {
+        a.add(d).v = "["
+        b.add(d).v = "]"
+        a.v = "."
+        b.v = "."
+      }
+    }
+    if (p.add(d).v == ".") {
+      p.v = "."
+      p.add(d).v = "@"
+    }
+  } finally {
+    console.log("--")
+    g.log()
   }
 }
 function ss() {
