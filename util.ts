@@ -395,9 +395,9 @@ Function.prototype.c = function () {
 
 Function.prototype.inv = function () {
   const self = this
-  return function (...args) {
+  return function (this: any, ...args: any[]) {
     return !self.apply(this, args)
-  }
+  } as any
 }
 
 Function.prototype.fnregexcapture = function (arr) {
@@ -963,6 +963,13 @@ class Point<T = unknown> {
     readonly z: number | undefined,
     readonly g: Grid<T> | undefined,
   ) {}
+
+  get gg(): Grid<T> {
+    if (!this.g) {
+      throw new Error("Cannot access .gg on unowned point.")
+    }
+    return this.g
+  }
 
   addIn(set: PointSet<T>) {
     set.add(this)
@@ -1589,10 +1596,13 @@ declare global {
      *     const inv = hi.inv()
      *     inv(19) // true
      *     inv(35) // false
+     *
+     * Note that the type definition is incorrect. `tsc` doesn't properly infer
+     * the arguments type, so I can't make a proper new `(...args: params) =>
+     * boolean` type. Thus, calling `(() => true).inv()` might mistakenly output
+     * a type of `() => true`. Be aware of this.
      */
-    inv<F extends (...args: any[]) => any>(
-      this: F,
-    ): (this: ThisParameterType<F>, ...args: Parameters<F>) => boolean
+    inv<A extends (...args: any) => boolean>(this: A): A
     /** Calls `this` with the provided arguments. */
     fnregexcapture<T extends (x: RegExpExecArray) => any>(
       this: T,

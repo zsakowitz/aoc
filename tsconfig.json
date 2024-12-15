@@ -7,6 +7,7 @@
     "module": "esnext",
     "skipLibCheck": true,
     "target": "esnext",
-    "checkJs": true
+    "checkJs": true,
+    "noEmit": true
   }
 }

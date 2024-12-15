@@ -31,13 +31,13 @@ g.rows
     }
     let a = p.c()
     let b = p.c()
-    while (a.l().v?.is(/\d/)) {
-      a = a.l()
+    while (a.l.v?.is(/\d/)) {
+      a = a.l
     }
-    while (b.r().v?.is(/\d/)) {
-      b = b.r()
+    while (b.r.v?.is(/\d/)) {
+      b = b.r
     }
-    return [a.x, b.x, +p.g.rows[p.i].slice(a.x, b.x + 1).join("")]
+    return [a.x, b.x, +p.gg.rows[p.i].slice(a.x, b.x + 1).join("")]
   }
 
   const gs = input(2023, 3)
@@ -46,16 +46,16 @@ g.rows
     .filter((pt) => pt.v.is(/[^\d.]/))
     .toArray()
     .sum((pt) => {
-      const t = expand(pt.t())
-      const b = expand(pt.b())
-      const l = expand(pt.l())
-      const r = expand(pt.r())
-      const lt = t && t[0] < pt.x ? null : expand(pt.lt())
-      const lb = b && b[0] < pt.x ? null : expand(pt.lb())
+      const t = expand(pt.t)
+      const b = expand(pt.b)
+      const l = expand(pt.l)
+      const r = expand(pt.r)
+      const lt = t && t[0] < pt.x ? null : expand(pt.lt)
+      const lb = b && b[0] < pt.x ? null : expand(pt.lb)
       const rt =
-        (t && t[1] > pt.x) || (lt && lt[1] > pt.x) ? null : expand(pt.rt())
+        (t && t[1] > pt.x) || (lt && lt[1] > pt.x) ? null : expand(pt.rt)
       const rb =
-        (b && b[1] > pt.x) || (lb && lb[1] > pt.x) ? null : expand(pt.rb())
+        (b && b[1] > pt.x) || (lb && lb[1] > pt.x) ? null : expand(pt.rb)
       const a = [t, b, l, r, lt, lb, rt, rb].filter((x) => x !== null)
       if (a.length != 2) return 0
       return a[0][2] * a[1][2]

@@ -146,6 +146,12 @@ String.prototype.dir = function () {
         v: pt(0, 1),
     }[this];
 };
+String.prototype.dirs = function () {
+    return this.chars().mnn((x) => x.dir());
+};
+String.prototype.ra = function (s, r) {
+    return this.replaceAll(s, r);
+};
 String.prototype.fnfilter = function (n) {
     return n === this || (n instanceof Point && !!n.g && n.v === this);
 };
@@ -782,6 +788,12 @@ class Point {
         this.y = y;
         this.z = z;
         this.g = g;
+    }
+    get gg() {
+        if (!this.g) {
+            throw new Error("Cannot access .gg on unowned point.");
+        }
+        return this.g;
     }
     addIn(set) {
         set.add(this);

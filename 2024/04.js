@@ -15,15 +15,5 @@ const i = input(2024, 4)
 // p2
 i.grid()
   .k()
-  .sum(
-    (pt) =>
-      pt
-        .lt()
-        .drb(2)
-        .j.is(mx`SAM`) &&
-      pt
-        .rt()
-        .dlb(2)
-        .j.is(mx`SAM`),
-  )
+  .sum((pt) => pt.lt.drb(2).j.is(mx`SAM`) && pt.rt.dlb(2).j.is(mx`SAM`))
   .check(1923)

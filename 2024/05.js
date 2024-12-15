@@ -4,12 +4,13 @@ const [a, b] = input(2024, 5).on`\n\n`
 const sheets = b.lines().on`,`.int()
 const rules = a.lines().on`|`.int()
 
+/** @type {Record<number, number[]>} */
 const afters = {}
 for (const [a, b] of rules) {
   ;(afters[a] ??= []).push(b)
 }
 
-function ok(sheet) {
+function ok(/** @type {number[]} */ sheet) {
   return rules.every(([a, b]) => {
     const ai = sheet.i(a)
     const bi = sheet.i(b)

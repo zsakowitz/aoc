@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { readFileSync, writeFileSync } from "node:fs"
 import { Worker, isMainThread, parentPort } from "node:worker_threads"
 import "./load.js"
