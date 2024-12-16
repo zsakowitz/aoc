@@ -59,59 +59,11 @@ function go(/** @type {string} */ input, /** @type {number} */ within) {
   s.v = "."
   e.v = "."
 
-  const ok = ps()
-
-  /** @type {Record<string, [number, boolean]>} */
-  const cache = Object.create(null)
-
-  /** @returns {boolean} */
-  function go(
-    /** @type {Point} */ src,
-    /** @type {Point} */ dir,
-    /** @type {number} */ steps,
-  ) {
-    if (steps == 0) {
-      if (src.is(e)) {
-        ok.add(src)
-        return true
-      } else {
-        return false
-      }
-    }
-
-    const id = [src, dir].id()
-    {
-      const cached = cache[id]
-      if (cached && cached[0] <= steps) return cached[1]
-    }
-
-    let success = false
-    if (steps >= 1000) {
-      const v = go(src, dir.c90(), steps - 1000)
-      success ||= v
-      const w = go(src, dir.cc90(), steps - 1000)
-      success ||= w
-    }
-
-    if (src.add(dir).v == ".") {
-      const q = go(src.add(dir), dir, steps - 1)
-      success ||= q
-    }
-
-    if (success) ok.add(src)
-
-    if (success) {
-      cache[id] = [steps, true]
-    }
-
-    return success
-  }
-
-  go(s, point(1, 0), within)
+  // IDEA: start + end == within
 
   console.timeEnd()
 
-  return ok.size
+  return 0
 }
 
 // go(input(2024, 16), 94232)
