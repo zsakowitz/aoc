@@ -48,21 +48,7 @@
 
 import "../util.js"
 
-const g = `###############
-#.......#....E#
-#.#.###.#.###.#
-#.....#.#...#.#
-#.###.#####.#.#
-#.#.#.......#.#
-#.#.#####.###.#
-#...........#.#
-###.#.#####.#.#
-#...#.....#.#.#
-#.#.#.###.#.#.#
-#.....#...#.#.#
-#.###.#.#.#.#.#
-#S..#.....#...#
-###############`.grid()
+const g = input().grid()
 const s = g.indexOf("S")
 const e = g.indexOf("E")
 s.v = "."
@@ -70,6 +56,9 @@ e.v = "."
 
 /** @type {Record<string, Record<number, boolean>>} */
 const cached = Object.create(null)
+
+let simult = 0
+let totals = 0
 
 /** @returns {boolean} */
 function go(
@@ -79,9 +68,15 @@ function go(
   /** @type {Point} */ dir,
   /** @type {number} */ within,
 ) {
+  totals++
+
   const id = start.id() + ";" + dir.id()
   const cache = (cached[id] ||= Object.create(null))
   if (cache[within] != null) return cache[within]
+  if (cache[within - 2000]) return (cache[within] = true)
+
+  simult++
+  if (simult % 10000 == 0) console.log({ simult, totals, within })
 
   if (within == 0) {
     return (cache[within] = start.is(end))
@@ -98,7 +93,7 @@ function go(
   return (cache[within] ||= val)
 }
 
-const within = 7036
+const within = 92432
 go(g, s, e, pt(1, 0), within)
 
 const v = Object.entries(cached)
@@ -108,3 +103,4 @@ const v = Object.entries(cached)
   .unique((x) => x.id())
 
 console.log(v.length)
+console.log({ simult, totals })
