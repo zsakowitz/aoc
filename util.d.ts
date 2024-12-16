@@ -16,6 +16,7 @@ declare class Point<T = unknown> {
     delIn(set: PointSet<T>): this;
     scale(n: number): Point<T>;
     c90(): Point<T>;
+    cc90(): Point<T>;
     exists(): boolean;
     xq(): this | undefined;
     fnfilter(pt: Point): boolean;

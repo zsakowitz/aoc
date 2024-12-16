@@ -809,6 +809,9 @@ class Point {
     c90() {
         return new Point(-this.y, this.x, this.z, this.g);
     }
+    cc90() {
+        return new Point(this.y, -this.x, this.z, this.g);
+    }
     exists() {
         if (!this.g) {
             throw new Error("Cannot check for an unowned point's existence.");
