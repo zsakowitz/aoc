@@ -59,60 +59,59 @@ function go(/** @type {string} */ input, /** @type {number} */ within) {
   s.v = "."
   e.v = "."
 
-  const q = g.map((x) => {
-    if (x == "#") return false
-    /** @type {X} */ const t = [[], pt(0, -1)]
-    /** @type {X} */ const b = [[], pt(0, 1)]
-    /** @type {X} */ const l = [[], pt(-1, 0)]
-    /** @type {X} */ const r = [[], pt(1, 0)]
-    t[2] = b[2] = l
-    t[3] = b[3] = r
-    l[2] = r[2] = t
-    l[3] = r[3] = b
-    return [t, r, b, l]
-  })
+  const ok = ps()
 
-  e.in(q).v[1][0].push(within)
+  /** @type {Record<string, [number, boolean]>} */
+  const cache = Object.create(null)
 
-  let start = Date.now()
-  for (let num = within; num > 0; num--) {
-    if (num % 100 == 0)
-      console.log({
-        num,
-        d:
-          (Date.now() - start) / ((within - num) / within) +
-          (start - Date.now()),
-      })
-    q.k().forEach((p) => {
-      if (!p.v) return
-      for (const [i, [v, d, l, r]] of p.v.entries()) {
-        if (!v.includes(num)) continue
-
-        {
-          const n = p.add(d)
-          if (n.v) {
-            n.v[i][0].add(num - 1)
-          }
-        }
-
-        if (num >= 1000) {
-          for (const x of [l, r]) {
-            x[0].add(num - 1000)
-          }
-        }
+  /** @returns {boolean} */
+  function go(
+    /** @type {Point} */ src,
+    /** @type {Point} */ dir,
+    /** @type {number} */ steps,
+  ) {
+    if (steps == 0) {
+      if (src.is(e)) {
+        ok.add(src)
+        return true
+      } else {
+        return false
       }
-    })
+    }
+
+    const id = [src, dir].id()
+    {
+      const cached = cache[id]
+      if (cached && cached[0] <= steps) return cached[1]
+    }
+
+    let success = false
+    if (steps >= 1000) {
+      const v = go(src, dir.c90(), steps - 1000)
+      success ||= v
+      const w = go(src, dir.cc90(), steps - 1000)
+      success ||= w
+    }
+
+    if (src.add(dir).v == ".") {
+      const q = go(src.add(dir), dir, steps - 1)
+      success ||= q
+    }
+
+    if (success) ok.add(src)
+
+    if (success) {
+      cache[id] = [steps, true]
+    }
+
+    return success
   }
 
-  // console.log(
-  //   q.rows
-  //     .flat()
-  //     .filter((x) => x != false)
-  //     .flatMap((x) => x.map((x) => x[0]))
-  //     .filter((x) => x.length),
-  // )
+  go(s, point(1, 0), within)
+
   console.timeEnd()
-  return 0
+
+  return ok.size
 }
 
 // go(input(2024, 16), 94232)
