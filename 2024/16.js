@@ -48,59 +48,107 @@
 
 import "../util.js"
 
-const g = input().grid()
-const s = g.indexOf("S")
-const e = g.indexOf("E")
-s.v = "."
-e.v = "."
+function go(/** @type {string} */ input, /** @type {number} */ within) {
+  console.time()
+  const g = input.grid()
+  const s = g.indexOf("S")
+  const e = g.indexOf("E")
+  s.v = "."
+  e.v = "."
 
-/** @type {Record<string, Record<number, boolean>>} */
-const cached = Object.create(null)
+  /** @type {Record<string, Record<number, boolean>>} */
+  const cached = Object.create(null)
 
-let simult = 0
-let totals = 0
+  /** @returns {boolean} */
+  function go(
+    /** @type {Grid<string>} */ g,
+    /** @type {Point} */ start,
+    /** @type {Point} */ end,
+    /** @type {Point} */ dir,
+    /** @type {number} */ within,
+  ) {
+    {
+      const c = (cached[[start, dir].id()] ??= Object.create(null))[within]
+      if (c != null) return c
+    }
 
-/** @returns {boolean} */
-function go(
-  /** @type {Grid<string>} */ g,
-  /** @type {Point} */ start,
-  /** @type {Point} */ end,
-  /** @type {Point} */ dir,
-  /** @type {number} */ within,
-) {
-  totals++
+    {
+      const c = (cached[[start, dir.neg()].id()] ??= Object.create(null))[
+        within + 2000
+      ]
+      if (c != null)
+        return ((cached[[start, dir].id()] ??= Object.create(null))[within] = c)
+    }
 
-  const id = start.id() + ";" + dir.id()
-  const cache = (cached[id] ||= Object.create(null))
-  if (cache[within] != null) return cache[within]
-  if (cache[within - 2000]) return (cache[within] = true)
+    if (within == 0) {
+      return ((cached[[start, dir].id()] ??= Object.create(null))[within] =
+        start.is(end))
+    }
 
-  simult++
-  if (simult % 10000 == 0) console.log({ simult, totals, within })
+    let success = false
 
-  if (within == 0) {
-    return (cache[within] = start.is(end))
+    if (within >= 1000) {
+      const a = go(g, start, end, dir.c90(), within - 1000)
+      const b = go(g, start, end, dir.cc90(), within - 1000)
+      if (a || b) success = true
+    }
+
+    const next = start.add(dir)
+    const val = next.v == "." && go(g, next, end, dir, within - 1)
+    if (val) success = true
+
+    return ((cached[[start, dir].id()] ??= Object.create(null))[within] =
+      success)
   }
 
-  if (within >= 1000) {
-    const a = go(g, start, end, dir.c90(), within - 1000)
-    const b = go(g, start, end, dir.cc90(), within - 1000)
-    if (a || b) cache[within] = true
-  }
+  go(g, s, e, pt(1, 0), within)
 
-  const next = start.add(dir)
-  const val = next.v == "." && go(g, next, end, dir, within - 1)
-  return (cache[within] ||= val)
+  const v = Object.entries(cached)
+    .filter((x) => Object.entries(x[1]).some((x) => x[1]))
+    .map((x) => x[0].split(";")[0].ints())
+    .map((x) => pt(...x))
+    .unique((x) => x.id())
+
+  console.timeEnd()
+  return v.length
 }
 
-const within = 92432
-go(g, s, e, pt(1, 0), within)
+go(
+  `###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############`,
+  7036,
+).check(45)
 
-const v = Object.entries(cached)
-  .filter((x) => Object.entries(x[1]).some((x) => x[1]))
-  .map((x) => x[0].split(";")[0].ints())
-  .map((x) => pt(...x))
-  .unique((x) => x.id())
-
-console.log(v.length)
-console.log({ simult, totals })
+go(
+  `#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################`,
+  11048,
+).check(64)

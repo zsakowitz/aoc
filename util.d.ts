@@ -41,6 +41,8 @@ declare class Point<T = unknown> {
     get j(): number;
     is(other: Point): boolean;
     id(): string;
+    neg(): Point<T>;
+    inv(): Point<T>;
     /**
      * Index in a grid like
      *

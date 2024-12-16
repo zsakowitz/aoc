@@ -895,6 +895,12 @@ class Point {
     id() {
         return `${this.x},${this.y},${this.z}`;
     }
+    neg() {
+        return new Point(-this.x, -this.y, this.z == null ? undefined : -this.z, this.g);
+    }
+    inv() {
+        return this.neg();
+    }
     /**
      * Index in a grid like
      *
