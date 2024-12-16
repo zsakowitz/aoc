@@ -90,18 +90,107 @@ declare class Grid<T> {
     at(pt: Point): T | X;
     set(pt: Point, value: T): T;
     k(): IteratorObject<Point<T>, undefined>;
+    [Symbol.iterator](): IteratorObject<Point<T>, undefined, unknown>;
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;
     c(this: Grid<T & FnCopy>): Grid<T>;
     copyFrom(other: Grid<T>): void;
     draw(this: Grid<string>): void;
 }
+declare class Graph<T> {
+    readonly v: GraphNode<T>[];
+    constructor(v?: GraphNode<T>[]);
+    /**
+     * Clones the graph, its nodes, and its edges, but does not clone the node
+     * values.
+     */
+    sc(this: Graph<T>, clone?: (v: T) => T): Graph<T>;
+    /** Same as `.sc()`, but reverses all edges. */
+    screv(this: Graph<T>, clone?: (v: T) => T): Graph<T>;
+    k(): ArrayIterator<GraphNode<T>>;
+    add(value: T): GraphNode<T>;
+    djikstra(start: GraphNode<T> | GraphNode<T>[]): Map<GraphNode<T>, number>;
+}
+declare class GraphNode<T> {
+    v: T;
+    readonly g: Graph<T>;
+    /** Outgoing links. */
+    readonly o: GraphEdge<T>[];
+    /** Incoming links. */
+    readonly i: GraphEdge<T>[];
+    constructor(v: T, g: Graph<T>);
+    link(node: GraphNode<T>, weight?: number): GraphEdge<T>;
+    remove(): void;
+}
+declare class GraphEdge<T> {
+    readonly a: GraphNode<T>;
+    readonly b: GraphNode<T>;
+    readonly w: number;
+    constructor(a: GraphNode<T>, b: GraphNode<T>, w: number);
+    unlink(): void;
+}
+declare class DLL<T> {
+    readonly v: T;
+    l: DLL<T>;
+    r: DLL<T>;
+    constructor(v: T);
+    /** Inserts a new value to this node's right. */
+    irv(value: T): DLL<T>;
+    /** Removes this node. */
+    rm(): void;
+}
+declare class FibHeap<T> {
+    readonly lt: (a: T, b: T) => boolean;
+    n: number;
+    min: FibNode<T> | undefined;
+    root: FibNode<T> | undefined;
+    constructor(lt?: (a: T, b: T) => boolean);
+    insert(value: T): FibNode<T>;
+    mergeWithRootList(node: FibNode<T>): void;
+    union(other: FibHeap<T>): FibHeap<T>;
+    extractMin(): FibNode<T> | undefined;
+    removeFromRootList(node: FibNode<T>): void;
+    consolidate(): void;
+    heapLink(y: FibNode<T>, x: FibNode<T>): void;
+    mergeWithChildList(parent: FibNode<T>, node: FibNode<T>): void;
+    cut(x: FibNode<T>, y: FibNode<T>): void;
+    cascadingCut(y: FibNode<T>): void;
+    removeFromChildList(parent: FibNode<T>, node: FibNode<T>): void;
+    log(): void;
+}
+declare class FibNode<T> {
+    vr: T;
+    readonly heap: FibHeap<T>;
+    degree: number;
+    mark: boolean;
+    parent: FibNode<T> | undefined;
+    child: FibNode<T> | undefined;
+    l: FibNode<T>;
+    r: FibNode<T>;
+    constructor(vr: T, heap: FibHeap<T>);
+    get v(): T;
+    set v(k: T);
+    siblings(): FibNode<T>[];
+    log(): void;
+}
 declare var __Point: typeof Point;
 type __Point<T> = Point<T>;
 declare var __Grid: typeof Grid;
 type __Grid<T> = Grid<T>;
+declare var __Graph: typeof Graph;
+type __Graph<T> = Graph<T>;
+declare var __GraphNode: typeof GraphNode;
+type __GraphNode<T> = GraphNode<T>;
+declare var __GraphEdge: typeof GraphEdge;
+type __GraphEdge<T> = GraphEdge<T>;
 declare var __PointSet: typeof PointSet;
 type __PointSet<T> = PointSet<T>;
+declare var __DLL: typeof DLL;
+type __DLL<T> = DLL<T>;
+declare var __FibHeap: typeof FibHeap;
+type __FibHeap<T> = FibHeap<T>;
+declare var __FibNode: typeof FibNode;
+type __FibNode<T> = FibNode<T>;
 type FnFilter<T, I = number> = ((x: T, i: I) => boolean) | {
     fnfilter(this: any, x: T, i: I): boolean;
 };
@@ -427,6 +516,12 @@ declare global {
         perms(): Generator<{
             [K in keyof this]: this[keyof this & number];
         }>;
+        /** Finds the minimum value. */
+        min(this: readonly number[]): number;
+        /** Finds the maximum value. */
+        max(this: readonly number[]): number;
+        /** Returns the indices of each element and their values. */
+        enum(): [index: number, value: T][];
     }
     interface ReadonlyArray<T> extends ArrayBase<T> {
     }
@@ -436,7 +531,11 @@ declare global {
         /** Sorts this array numerically. */
         s(this: number[]): number[];
         /** Adds an element if it does not exist already. */
-        add(el: T): void;
+        add(el: T): T;
+        /** Removes the first instance of an element from an array. */
+        remove(el: T): T;
+        /** Clears the array. */
+        clear(): void;
     }
     interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
         /** Sums the elements of this iterator. */
@@ -500,6 +599,8 @@ declare global {
         do<T, U>(this: T, f: (x: T) => U): U;
         /** Repeats `this` in an array `n` times. */
         r<T>(this: Extract<T, FnCopy>, n: number): T[];
+        /** Logs this value and returns it. */
+        log<T>(this: T, ...args: any[]): T;
     }
     interface Boolean {
         /** Returns `this`. */
@@ -569,6 +670,30 @@ declare global {
     };
     /** A grid. */
     type Grid<T> = __Grid<T>;
+    /** A directed graph. */
+    var Graph: typeof __Graph;
+    /** A directed graph. */
+    type Graph<T> = __Graph<T>;
+    /** A node in a directed graph. */
+    var GraphNode: typeof __GraphNode;
+    /** A node in a directed graph. */
+    type GraphNode<T> = __GraphNode<T>;
+    /** An edge in a directed graph. */
+    var GraphEdge: typeof __GraphEdge;
+    /** An edge in a directed graph. */
+    type GraphEdge<T> = __GraphEdge<T>;
+    /** A node in a circular doubly-linked list. */
+    var DLL: typeof __DLL;
+    /** A node in a circular doubly-linked list. */
+    type DLL<T> = __DLL<T>;
+    /** A Fibonacci heap. */
+    var FibHeap: typeof __FibHeap;
+    /** A Fibonacci heap. */
+    type FibHeap<T> = __FibHeap<T>;
+    /** A node in a Fibonacci heap. */
+    var FibNode: typeof __FibNode;
+    /** A node in a Fibonacci heap. */
+    type FibNode<T> = __FibNode<T>;
     /** An iterator over all positive integers. */
     var ints: {
         (): Generator<number, never, unknown>;

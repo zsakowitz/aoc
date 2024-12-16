@@ -1,6 +1,10 @@
 import "../util.js"
 
-function go(/** @type {string} */ input, /** @type {number} */ within) {
+function go(
+  /** @type {string} */ input,
+  /** @type {number} */ p1expected,
+  /** @type {number} */ p2expected,
+) {
   console.time()
 
   const g = input.grid()
@@ -9,66 +13,80 @@ function go(/** @type {string} */ input, /** @type {number} */ within) {
   s.v = "."
   e.v = "."
 
-  const dists = g.map((x) =>
-    x == "#"
-      ? null
-      : t(
-          Point.ring(() => /** @type {number[]} */ ([])),
-          Point.ring(() => /** @type {number[]} */ ([])),
-        ),
-  )
-
-  nn(dists.at(s))[0][1][0].push(within)
-  // nn(dists.at(e))[1][0][0].push(within)
-  // nn(dists.at(e))[1][1][0].push(within)
-  // nn(dists.at(e))[1][2][0].push(within)
-  nn(dists.at(e))[1][3][0].push(within)
-
-  for (let i = within; i > 0; i--) {
-    if (i % 1000 == 0) console.log(i)
-
-    for (const k of dists.k()) {
+  function create(/** @type {"add" | "sub"} */ f) {
+    /** @type {Graph<0>} */
+    const graph = new Graph()
+    const o = g.map((x) => (x == "." ? Point.ring(() => graph.add(0)) : null))
+    for (const k of o) {
       if (!k.v) continue
-
-      for (const [idxPart, ring] of k.v.entries()) {
-        for (const [idxRing, [values, dir, l, r]] of ring.entries()) {
-          if (!values.some((x) => x == i)) continue
-
-          {
-            const next = k.add(dir)
-            if (next.v) {
-              next.v[idxPart][idxRing][0].add(i - 1)
-            }
-          }
-
-          if (i >= 1000) {
-            for (const side of [l, r]) {
-              side[0].add(i - 1000)
-            }
-          }
+      for (const [i, [v, d, ...lr]] of k.v.entries()) {
+        for (const [side] of lr) {
+          v.link(side, 1000)
+        }
+        const n = k[f](d)
+        if (n.v) {
+          v.link(n.v[i][0], 1)
         }
       }
     }
+
+    console.timeLog("default", "building graph")
+
+    return t(graph, o)
   }
 
-  // IDEA: start + end == within
+  const [nor, onor] = create("add")
+  const [rev, orev] = create("sub")
+
+  const nord = nor.djikstra(nn(onor.at(s))[1][0])
+  console.timeLog("default", "running djikstra")
+
+  const ends = nn(onor.at(e))
+    .map((ring) => nn(nord.get(ring[0])))
+    .enum()
+
+  const p1 = ends.map((x) => x[1]).min()
+  p1.check(p1expected)
+
+  console.timeLog("default", "finished p1")
+
+  const revd = rev.djikstra(
+    ends.filter((x) => x[1] == p1).map(([i]) => nn(orev.at(e))[i][0]),
+  )
+  console.timeLog("default", "running djikstra #2")
+
+  const p2 = onor.k().count((n) => {
+    if (!n.v) return
+    const r = n.in(orev)
+    if (!r.v) return
+    return [0, 1, 2, 3].some((idxRing) => {
+      const a = nn(n.v)[idxRing][0]
+      const b = nn(r.v)[idxRing][0]
+      const as = nord.get(a) ?? NaN
+      const bs = revd.get(b) ?? NaN
+      return as + bs == p1
+    })
+  })
+  console.timeLog("default", "counting p2")
+  p2.check(p2expected)
 
   console.timeEnd()
-
-  return dists.k().count(
-    (k) =>
-      k.v &&
-      [0, 1, 2, 3].some((idxRing) => {
-        const a = nn(k.v)[0][idxRing][0]
-        const b = nn(k.v)[1][(idxRing + 2) % 4][0]
-        return a.some((a) => b.some((b) => a + b == within))
-      }),
-  )
 }
 
-go(input(2024, 16), 94232)
+function go2(
+  /** @type {string} */ input,
+  /** @type {number} */ p1expected,
+  /** @type {number} */ p2expected,
+) {
+  console.group(p1expected, p2expected)
+  try {
+    go(input, p1expected, p2expected)
+  } finally {
+    console.groupEnd()
+  }
+}
 
-go(
+go2(
   `###############
 #.......#....E#
 #.#.###.#.###.#
@@ -85,25 +103,29 @@ go(
 #S..#.....#...#
 ###############`,
   7036,
-).check(45)
+  45,
+)
 
-// go(
-//   `#################
-// #...#...#...#..E#
-// #.#.#.#.#.#.#.#.#
-// #.#.#.#...#...#.#
-// #.#.#.#.###.#.#.#
-// #...#.#.#.....#.#
-// #.#.#.#.#.#####.#
-// #.#...#.#.#.....#
-// #.#.#####.#.###.#
-// #.#.#.......#...#
-// #.#.###.#####.###
-// #.#.#...#.....#.#
-// #.#.#.#####.###.#
-// #.#.#.........#.#
-// #.#.#.#########.#
-// #S#.............#
-// #################`,
-//   11048,
-// ).check(64)
+go2(
+  `#################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################`,
+  11048,
+  64,
+)
+
+go2(input(2024, 16), 92432, 458)

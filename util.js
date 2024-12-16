@@ -518,12 +518,31 @@ Array.prototype.perms = function* () {
         }
     }
 };
+Array.prototype.min = function () {
+    return Math.min(...this);
+};
+Array.prototype.max = function () {
+    return Math.max(...this);
+};
+Array.prototype.enum = function () {
+    return this.values().enum().toArray();
+};
 Array.prototype.s = function () {
     return this.sort((a, b) => a - b);
 };
 Array.prototype.add = function (el) {
     if (!this.includes(el))
         this.push(el);
+    return el;
+};
+Array.prototype.remove = function (el) {
+    const idx = this.indexOf(el);
+    if (idx != -1)
+        this.splice(idx, 1);
+    return el;
+};
+Array.prototype.clear = function () {
+    this.length = 0;
 };
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
@@ -548,8 +567,8 @@ Iterator.prototype.enum = function* (f) {
     if (!f) {
         let v = 0;
         for (const x of this) {
-            v++;
             yield [v, x];
+            v++;
         }
         return v;
     }
@@ -558,10 +577,10 @@ Iterator.prototype.enum = function* (f) {
         let i = 0;
         for (const x of this) {
             if (f.fnfilter(x, i)) {
+                yield [v, x];
                 v++;
             }
             i++;
-            yield [v, x];
         }
         return v;
     }
@@ -629,6 +648,10 @@ Object.prototype.do = function (f) {
 };
 Object.prototype.r = function (n) {
     return Array.from({ length: n }, () => this.c());
+};
+Object.prototype.log = function (...args) {
+    console.log(this, ...args);
+    return this;
 };
 Boolean.prototype.c = function () {
     return Boolean(this);
@@ -1101,6 +1124,9 @@ class Grid {
             }
         }
     }
+    [Symbol.iterator]() {
+        return this.k();
+    }
     flat() {
         return this.rows.flat();
     }
@@ -1151,6 +1177,390 @@ class Grid {
 globalThis.Grid = function (rows = []) {
     return new Grid(rows);
 };
+class Graph {
+    v;
+    constructor(v = []) {
+        this.v = v;
+    }
+    /**
+     * Clones the graph, its nodes, and its edges, but does not clone the node
+     * values.
+     */
+    sc(clone = (v) => v) {
+        const graph = new Graph();
+        const map = new Map();
+        for (const prev of this.v) {
+            const node = graph.add(clone(prev.v));
+            map.set(prev, node);
+        }
+        for (const prev of this.v) {
+            const a = map.get(prev);
+            for (const { b: bPrev, w } of prev.o) {
+                const b = map.get(bPrev);
+                a.link(b, w);
+            }
+        }
+        return graph;
+    }
+    /** Same as `.sc()`, but reverses all edges. */
+    screv(clone = (v) => v) {
+        const graph = new Graph();
+        const map = new Map();
+        for (const prev of this.v) {
+            const node = graph.add(clone(prev.v));
+            map.set(prev, node);
+        }
+        for (const prev of this.v) {
+            const a = map.get(prev);
+            for (const { b: bPrev, w } of prev.o) {
+                const b = map.get(bPrev);
+                b.link(a, w);
+            }
+        }
+        return graph;
+    }
+    k() {
+        return this.v.values();
+    }
+    add(value) {
+        const node = new GraphNode(value, this);
+        this.v.push(node);
+        return node;
+    }
+    djikstra(start) {
+        const shortest = new Map(this.k().map((x) => [x, Infinity]));
+        const unvisited = new Set(this.k());
+        for (const zeroed of Array.isArray(start) ? start : [start]) {
+            shortest.set(zeroed, 0);
+        }
+        while (unvisited.size) {
+            let min = null;
+            for (const node of unvisited) {
+                if (min == null) {
+                    min = node;
+                }
+                else if (shortest.get(node) < shortest.get(min)) {
+                    min = node;
+                }
+            }
+            const a = min;
+            for (const edge of a.o) {
+                const { w, b } = edge;
+                if (w + shortest.get(a) < shortest.get(b)) {
+                    shortest.set(b, w + shortest.get(a));
+                }
+            }
+            unvisited.delete(a);
+        }
+        return shortest;
+    }
+}
+globalThis.Graph = Graph;
+class GraphNode {
+    v;
+    g;
+    /** Outgoing links. */
+    o = [];
+    /** Incoming links. */
+    i = [];
+    constructor(v, g) {
+        this.v = v;
+        this.g = g;
+    }
+    link(node, weight = 1) {
+        const edge = new GraphEdge(this, node, weight);
+        this.o.push(edge);
+        node.i.push(edge);
+        return edge;
+    }
+    remove() {
+        for (const o of this.o) {
+            o.b.i.remove(o);
+        }
+        for (const i of this.i) {
+            i.a.o.remove(i);
+        }
+        this.o.clear();
+        this.i.clear();
+        this.g.v.remove(this);
+    }
+}
+globalThis.GraphNode = GraphNode;
+class GraphEdge {
+    a;
+    b;
+    w;
+    constructor(a, b, w) {
+        this.a = a;
+        this.b = b;
+        this.w = w;
+    }
+    unlink() {
+        this.a.o.remove(this);
+        this.b.i.remove(this);
+    }
+}
+globalThis.GraphEdge = GraphEdge;
+class DLL {
+    v;
+    l;
+    r;
+    constructor(v) {
+        this.v = v;
+        this.l = this;
+        this.r = this;
+    }
+    /** Inserts a new value to this node's right. */
+    irv(value) {
+        const next = new DLL(value);
+        next.l = this;
+        next.r = this.r;
+        this.r = next;
+        return next;
+    }
+    /** Removes this node. */
+    rm() {
+        this.l.r = this.r;
+        this.r.l = this.l;
+        this.l = this.r = this;
+    }
+}
+globalThis.DLL = DLL;
+class FibHeap {
+    lt;
+    n = 0;
+    min;
+    root;
+    constructor(lt = (a, b) => a < b) {
+        this.lt = lt;
+    }
+    insert(value) {
+        const node = new FibNode(value, this);
+        this.mergeWithRootList(node);
+        if (this.min == null || this.lt(value, this.min.vr)) {
+            this.min = node;
+        }
+        this.n++;
+        return node;
+    }
+    mergeWithRootList(node) {
+        if (this.root) {
+            node.r = this.root;
+            node.l = this.root.l;
+            this.root.l.r = node;
+            this.root.l = node;
+        }
+        else {
+            this.root = node;
+        }
+    }
+    union(other) {
+        if (!other.root) {
+            return this;
+        }
+        if (!this.root) {
+            return other;
+        }
+        const ret = new FibHeap(this.lt);
+        ret.root = this.root;
+        ret.min = this.lt(this.min.vr, other.min.vr) ? this.min : other.min;
+        const last = other.root.l;
+        other.root.l = ret.root.l;
+        ret.root.l.r = other.root;
+        ret.root.l = last;
+        ret.root.l.r = ret.root;
+        ret.n = this.n + other.n;
+        return ret;
+    }
+    extractMin() {
+        const z = this.min;
+        if (!z)
+            return z;
+        if (z.child) {
+            const children = z.child.siblings();
+            for (const c of children) {
+                this.mergeWithRootList(c);
+                c.parent = undefined;
+            }
+        }
+        this.removeFromRootList(z);
+        if (z == z.r) {
+            this.min = undefined;
+            this.root = undefined;
+        }
+        else {
+            this.min = z.r;
+            this.consolidate();
+        }
+        this.n--;
+        return z;
+    }
+    removeFromRootList(node) {
+        if (node == this.root) {
+            this.root = node.r;
+        }
+        node.l.r = node.r;
+        node.r.l = node.l;
+    }
+    consolidate() {
+        const A = Array.from({ length: Math.floor(Math.log(this.n) * 2) }, () => undefined);
+        const nodes = this.root.siblings();
+        for (const w of rx(nodes.length)) {
+            let x = nodes[w];
+            let d = x.degree;
+            while (A[d]) {
+                let y = A[d];
+                if (this.lt(y.vr, x.vr)) {
+                    const temp = x;
+                    x = y;
+                    y = temp;
+                }
+                this.heapLink(y, x);
+                A[d] = undefined;
+                d++;
+            }
+            A[d] = x;
+        }
+        for (const i of rx(A.length)) {
+            if (A[i]) {
+                if (this.lt(A[i].vr, this.min.vr)) {
+                    this.min = A[i];
+                }
+            }
+        }
+    }
+    heapLink(y, x) {
+        this.removeFromRootList(y);
+        y.l = y.r = y;
+        this.mergeWithChildList(x, y);
+        x.degree += 1;
+        y.parent = x;
+        y.mark = false;
+    }
+    mergeWithChildList(parent, node) {
+        if (!parent.child) {
+            parent.child = node;
+        }
+        else {
+            node.r = parent.child.r;
+            node.l = parent.child;
+            parent.child.r.l = node;
+            parent.child.r = node;
+        }
+    }
+    cut(x, y) {
+        this.removeFromChildList(y, x);
+        y.degree -= 1;
+        this.mergeWithRootList(x);
+        x.parent = undefined;
+        x.mark = false;
+    }
+    cascadingCut(y) {
+        const z = y.parent;
+        if (z) {
+            if (y.mark) {
+                this.cut(y, z);
+                this.cascadingCut(z);
+            }
+            else {
+                y.mark = true;
+            }
+        }
+    }
+    removeFromChildList(parent, node) {
+        if (parent.child == parent.child.r) {
+            parent.child = undefined;
+        }
+        else if (parent.child == node) {
+            parent.child = node.r;
+            node.r.parent = parent;
+        }
+        node.l.r = node.r;
+        node.r.l = node.l;
+    }
+    log() {
+        console.group("<tree>");
+        try {
+            if (this.root) {
+                for (const node of this.root.siblings()) {
+                    node.log();
+                }
+            }
+        }
+        finally {
+            console.groupEnd();
+        }
+    }
+}
+globalThis.FibHeap = FibHeap;
+class FibNode {
+    vr;
+    heap;
+    degree = 0;
+    mark = false;
+    parent;
+    child;
+    l;
+    r;
+    constructor(vr, heap) {
+        this.vr = vr;
+        this.heap = heap;
+        this.l = this.r = this;
+    }
+    get v() {
+        return this.vr;
+    }
+    set v(k) {
+        const { heap } = this;
+        if (heap.lt(this.vr, k)) {
+            return;
+        }
+        this.vr = k;
+        const y = this.parent;
+        if (y && heap.lt(this.vr, y.vr)) {
+            heap.cut(this, y);
+            heap.cascadingCut(y);
+        }
+        if (heap.lt(this.vr, heap.min.vr)) {
+            heap.min = this;
+        }
+    }
+    siblings() {
+        let node = this;
+        let stop = this;
+        let flag = false;
+        const ret = [];
+        while (true) {
+            if (node == stop && flag)
+                break;
+            else if (node == stop)
+                flag = true;
+            ret.push(node);
+            node = node.r;
+        }
+        return ret;
+    }
+    log() {
+        if (this.child) {
+            console.group(this.vr);
+            try {
+                for (const c of this.child.siblings()) {
+                    c.log();
+                }
+            }
+            finally {
+                console.groupEnd();
+            }
+        }
+        else if (this.vr == null) {
+            console.log(this.vr);
+        }
+        else {
+            this.vr.log();
+        }
+    }
+}
+globalThis.FibNode = FibNode;
 globalThis.ints = Object.assign(function* () {
     for (let i = 0;; i++) {
         yield i;
