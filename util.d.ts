@@ -121,6 +121,7 @@ declare class GraphNode<T> {
     constructor(v: T, g: Graph<T>);
     link(node: GraphNode<T>, weight?: number): GraphEdge<T>;
     remove(): void;
+    log(): void;
 }
 declare class GraphEdge<T> {
     readonly a: GraphNode<T>;
@@ -141,11 +142,12 @@ declare class DLL<T> {
 }
 declare class FibHeap<T> {
     readonly lt: (a: T, b: T) => boolean;
-    n: number;
+    size: number;
     min: FibNode<T> | undefined;
     root: FibNode<T> | undefined;
     constructor(lt?: (a: T, b: T) => boolean);
     insert(value: T): FibNode<T>;
+    insertRecursive(value: (node: FibNode<T>) => T): FibNode<T>;
     mergeWithRootList(node: FibNode<T>): void;
     union(other: FibHeap<T>): FibHeap<T>;
     extractMin(): FibNode<T> | undefined;

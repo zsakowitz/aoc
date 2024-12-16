@@ -1589,6 +1589,20 @@ class GraphNode<T> {
     this.i.clear()
     this.g.v.remove(this)
   }
+
+  log() {
+    log(this.v)
+  }
+}
+
+function log(v: unknown) {
+  if (v == null) {
+    console.log(v)
+  } else if (typeof v.log == "function") {
+    v.log()
+  } else {
+    console.log(v)
+  }
 }
 
 globalThis.GraphNode = GraphNode
@@ -1637,7 +1651,7 @@ class DLL<T> {
 globalThis.DLL = DLL
 
 class FibHeap<T> {
-  n = 0
+  size = 0
   min: FibNode<T> | undefined
   root: FibNode<T> | undefined
 
@@ -1652,7 +1666,21 @@ class FibHeap<T> {
       this.min = node
     }
 
-    this.n++
+    this.size++
+    return node
+  }
+
+  insertRecursive(value: (node: FibNode<T>) => T) {
+    const node = new FibNode<T>(null!, this)
+    node.vr = value(node)
+
+    this.mergeWithRootList(node)
+
+    if (this.min == null || this.lt(node.vr, this.min.vr)) {
+      this.min = node
+    }
+
+    this.size++
     return node
   }
 
@@ -1684,7 +1712,7 @@ class FibHeap<T> {
     ret.root.l.r = other.root
     ret.root.l = last
     ret.root.l.r = ret.root
-    ret.n = this.n + other.n
+    ret.size = this.size + other.size
 
     return ret
   }
@@ -1711,7 +1739,7 @@ class FibHeap<T> {
       this.consolidate()
     }
 
-    this.n--
+    this.size--
 
     return z
   }
@@ -1726,7 +1754,7 @@ class FibHeap<T> {
 
   consolidate() {
     const A = Array.from(
-      { length: Math.floor(Math.log(this.n) * 2) },
+      { length: Math.floor(Math.log(this.size) * 2) },
       (): FibNode<T> | undefined => undefined,
     )
     const nodes: FibNode<T>[] = this.root!.siblings()
@@ -1858,19 +1886,13 @@ class FibNode<T> {
   }
 
   siblings() {
-    let node: FibNode<T> | undefined = this
-    let stop: FibNode<T> | undefined = this
-    let flag = false
-    const ret = []
+    const ret: FibNode<T>[] = [this]
 
     while (true) {
-      if (node == stop && flag) break
-      else if (node == stop) flag = true
-      ret.push(node)
-      node = node.r
+      const next = ret.last.r
+      if (next == this) return ret
+      ret.push(next)
     }
-
-    return ret
   }
 
   log() {

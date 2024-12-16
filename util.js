@@ -1284,6 +1284,20 @@ class GraphNode {
         this.i.clear();
         this.g.v.remove(this);
     }
+    log() {
+        log(this.v);
+    }
+}
+function log(v) {
+    if (v == null) {
+        console.log(v);
+    }
+    else if (typeof v.log == "function") {
+        v.log();
+    }
+    else {
+        console.log(v);
+    }
 }
 globalThis.GraphNode = GraphNode;
 class GraphEdge {
@@ -1328,7 +1342,7 @@ class DLL {
 globalThis.DLL = DLL;
 class FibHeap {
     lt;
-    n = 0;
+    size = 0;
     min;
     root;
     constructor(lt = (a, b) => a < b) {
@@ -1340,7 +1354,17 @@ class FibHeap {
         if (this.min == null || this.lt(value, this.min.vr)) {
             this.min = node;
         }
-        this.n++;
+        this.size++;
+        return node;
+    }
+    insertRecursive(value) {
+        const node = new FibNode(null, this);
+        node.vr = value(node);
+        this.mergeWithRootList(node);
+        if (this.min == null || this.lt(node.vr, this.min.vr)) {
+            this.min = node;
+        }
+        this.size++;
         return node;
     }
     mergeWithRootList(node) {
@@ -1369,7 +1393,7 @@ class FibHeap {
         ret.root.l.r = other.root;
         ret.root.l = last;
         ret.root.l.r = ret.root;
-        ret.n = this.n + other.n;
+        ret.size = this.size + other.size;
         return ret;
     }
     extractMin() {
@@ -1392,7 +1416,7 @@ class FibHeap {
             this.min = z.r;
             this.consolidate();
         }
-        this.n--;
+        this.size--;
         return z;
     }
     removeFromRootList(node) {
@@ -1403,7 +1427,7 @@ class FibHeap {
         node.r.l = node.l;
     }
     consolidate() {
-        const A = Array.from({ length: Math.floor(Math.log(this.n) * 2) }, () => undefined);
+        const A = Array.from({ length: Math.floor(Math.log(this.size) * 2) }, () => undefined);
         const nodes = this.root.siblings();
         for (const w of rx(nodes.length)) {
             let x = nodes[w];
@@ -1526,19 +1550,13 @@ class FibNode {
         }
     }
     siblings() {
-        let node = this;
-        let stop = this;
-        let flag = false;
-        const ret = [];
+        const ret = [this];
         while (true) {
-            if (node == stop && flag)
-                break;
-            else if (node == stop)
-                flag = true;
-            ret.push(node);
-            node = node.r;
+            const next = ret.last.r;
+            if (next == this)
+                return ret;
+            ret.push(next);
         }
-        return ret;
     }
     log() {
         if (this.child) {
