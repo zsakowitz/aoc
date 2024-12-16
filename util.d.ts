@@ -5,11 +5,13 @@ declare function rangeTo(a: number, b: number): Generator<number, void, unknown>
     fnfilter: (x: number) => boolean;
 };
 type Range = ReturnType<typeof rangeTo>;
+type Ring<T> = [value: T, dir: Point, l: Ring<T>, r: Ring<T>];
 declare class Point<T = unknown> {
     readonly x: number;
     readonly y: number;
     readonly z: number | undefined;
     readonly g: Grid<T> | undefined;
+    static ring<T>(val: (dir: Point) => T): Ring<T>[];
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
     get gg(): Grid<T>;
     in<T>(grid: Grid<T>): Point<T>;

@@ -787,6 +787,17 @@ class Point {
     y;
     z;
     g;
+    static ring(val) {
+        const t = [val(pt(0, -1)), pt(0, -1)];
+        const l = [val(pt(-1, 0)), pt(-1, 0)];
+        const b = [val(pt(0, 1)), pt(0, 1)];
+        const r = [val(pt(1, 0)), pt(1, 0)];
+        t[2] = b[3] = l;
+        t[3] = b[2] = r;
+        l[2] = r[3] = b;
+        l[3] = r[2] = t;
+        return [t, r, b, l];
+    }
     constructor(x, y, z, g) {
         this.x = x;
         this.y = y;
@@ -993,10 +1004,10 @@ globalThis.pt =
             globalThis.Point =
                 Object.assign(function pt(...args) {
                     return new Point(...args);
-                }, Point);
+                }, { ring: Point.ring });
 globalThis.ij = Object.assign(function ij(i, j, ...args) {
     return new Point(j, i, ...args);
-}, Point);
+}, { ring: Point.ring });
 class Grid {
     rows;
     constructor(rows) {

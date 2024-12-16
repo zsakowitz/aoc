@@ -960,7 +960,21 @@ globalThis.mx = function (value) {
   }
 }
 
+type Ring<T> = [value: T, dir: Point, l: Ring<T>, r: Ring<T>]
+
 class Point<T = unknown> {
+  static ring<T>(val: (dir: Point) => T) {
+    const t = [val(pt(0, -1)), pt(0, -1)] as unknown as Ring<T>
+    const l = [val(pt(-1, 0)), pt(-1, 0)] as unknown as Ring<T>
+    const b = [val(pt(0, 1)), pt(0, 1)] as unknown as Ring<T>
+    const r = [val(pt(1, 0)), pt(1, 0)] as unknown as Ring<T>
+    t[2] = b[3] = l
+    t[3] = b[2] = r
+    l[2] = r[3] = b
+    l[3] = r[2] = t
+    return [t, r, b, l]
+  }
+
   constructor(
     readonly x: number,
     readonly y: number,
@@ -1246,13 +1260,19 @@ globalThis.pt =
   globalThis.p =
   globalThis.point =
   globalThis.Point =
-    Object.assign(function pt(...args: any[]) {
-      return new (Point as any)(...args)
-    }, Point) as any
+    Object.assign(
+      function pt(...args: any[]) {
+        return new (Point as any)(...args)
+      },
+      { ring: Point.ring },
+    ) as any
 
-globalThis.ij = Object.assign(function ij(i: any, j: any, ...args: any[]) {
-  return new (Point as any)(j, i, ...args)
-}, Point) as any
+globalThis.ij = Object.assign(
+  function ij(i: any, j: any, ...args: any[]) {
+    return new (Point as any)(j, i, ...args)
+  },
+  { ring: Point.ring },
+) as any
 
 class Grid<T> {
   constructor(public rows: T[][]) {}
