@@ -647,6 +647,10 @@ Array.prototype.s = function () {
   return this.sort((a, b) => a - b)
 }
 
+Array.prototype.add = function (el) {
+  if (!this.includes(el)) this.push(el)
+}
+
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum as any
 Iterator.prototype.prod = Array.prototype.prod as any
@@ -969,6 +973,10 @@ class Point<T = unknown> {
       throw new Error("Cannot access .gg on unowned point.")
     }
     return this.g
+  }
+
+  in<T>(grid: Grid<T>) {
+    return new Point(this.x, this.y, this.z, grid)
   }
 
   addIn(set: PointSet<T>) {
@@ -1766,6 +1774,8 @@ declare global {
     set last(v: T)
     /** Sorts this array numerically. */
     s(this: number[]): number[]
+    /** Adds an element if it does not exist already. */
+    add(el: T): void
   }
 
   interface IteratorObject<T, TReturn = unknown, TNext = unknown> {

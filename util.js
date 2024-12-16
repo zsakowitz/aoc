@@ -521,6 +521,10 @@ Array.prototype.perms = function* () {
 Array.prototype.s = function () {
     return this.sort((a, b) => a - b);
 };
+Array.prototype.add = function (el) {
+    if (!this.includes(el))
+        this.push(el);
+};
 // The polyfills work equally well because of .reduce().
 Iterator.prototype.sum = Array.prototype.sum;
 Iterator.prototype.prod = Array.prototype.prod;
@@ -794,6 +798,9 @@ class Point {
             throw new Error("Cannot access .gg on unowned point.");
         }
         return this.g;
+    }
+    in(grid) {
+        return new Point(this.x, this.y, this.z, grid);
     }
     addIn(set) {
         set.add(this);

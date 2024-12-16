@@ -12,6 +12,7 @@ declare class Point<T = unknown> {
     readonly g: Grid<T> | undefined;
     constructor(x: number, y: number, z: number | undefined, g: Grid<T> | undefined);
     get gg(): Grid<T>;
+    in<T>(grid: Grid<T>): Point<T>;
     addIn(set: PointSet<T>): this;
     delIn(set: PointSet<T>): this;
     scale(n: number): Point<T>;
@@ -432,6 +433,8 @@ declare global {
         set last(v: T);
         /** Sorts this array numerically. */
         s(this: number[]): number[];
+        /** Adds an element if it does not exist already. */
+        add(el: T): void;
     }
     interface IteratorObject<T, TReturn = unknown, TNext = unknown> {
         /** Sums the elements of this iterator. */

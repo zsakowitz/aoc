@@ -48,70 +48,74 @@
 
 import "../util.js"
 
+/** @typedef {[number[], Point, X, X]} X */
+
 function go(/** @type {string} */ input, /** @type {number} */ within) {
   console.time()
+
   const g = input.grid()
   const s = g.indexOf("S")
   const e = g.indexOf("E")
   s.v = "."
   e.v = "."
 
-  /** @type {Record<string, Record<number, boolean>>} */
-  const cached = Object.create(null)
+  const q = g.map((x) => {
+    if (x == "#") return false
+    /** @type {X} */ const t = [[], pt(0, -1)]
+    /** @type {X} */ const b = [[], pt(0, 1)]
+    /** @type {X} */ const l = [[], pt(-1, 0)]
+    /** @type {X} */ const r = [[], pt(1, 0)]
+    t[2] = b[2] = l
+    t[3] = b[3] = r
+    l[2] = r[2] = t
+    l[3] = r[3] = b
+    return [t, r, b, l]
+  })
 
-  /** @returns {boolean} */
-  function go(
-    /** @type {Grid<string>} */ g,
-    /** @type {Point} */ start,
-    /** @type {Point} */ end,
-    /** @type {Point} */ dir,
-    /** @type {number} */ within,
-  ) {
-    {
-      const c = (cached[[start, dir].id()] ??= Object.create(null))[within]
-      if (c != null) return c
-    }
+  e.in(q).v[1][0].push(within)
 
-    {
-      const c = (cached[[start, dir.neg()].id()] ??= Object.create(null))[
-        within + 2000
-      ]
-      if (c != null)
-        return ((cached[[start, dir].id()] ??= Object.create(null))[within] = c)
-    }
+  let start = Date.now()
+  for (let num = within; num > 0; num--) {
+    if (num % 100 == 0)
+      console.log({
+        num,
+        d:
+          (Date.now() - start) / ((within - num) / within) +
+          (start - Date.now()),
+      })
+    q.k().forEach((p) => {
+      if (!p.v) return
+      for (const [i, [v, d, l, r]] of p.v.entries()) {
+        if (!v.includes(num)) continue
 
-    if (within == 0) {
-      return ((cached[[start, dir].id()] ??= Object.create(null))[within] =
-        start.is(end))
-    }
+        {
+          const n = p.add(d)
+          if (n.v) {
+            n.v[i][0].add(num - 1)
+          }
+        }
 
-    let success = false
-
-    if (within >= 1000) {
-      const a = go(g, start, end, dir.c90(), within - 1000)
-      const b = go(g, start, end, dir.cc90(), within - 1000)
-      if (a || b) success = true
-    }
-
-    const next = start.add(dir)
-    const val = next.v == "." && go(g, next, end, dir, within - 1)
-    if (val) success = true
-
-    return ((cached[[start, dir].id()] ??= Object.create(null))[within] =
-      success)
+        if (num >= 1000) {
+          for (const x of [l, r]) {
+            x[0].add(num - 1000)
+          }
+        }
+      }
+    })
   }
 
-  go(g, s, e, pt(1, 0), within)
-
-  const v = Object.entries(cached)
-    .filter((x) => Object.entries(x[1]).some((x) => x[1]))
-    .map((x) => x[0].split(";")[0].ints())
-    .map((x) => pt(...x))
-    .unique((x) => x.id())
-
+  // console.log(
+  //   q.rows
+  //     .flat()
+  //     .filter((x) => x != false)
+  //     .flatMap((x) => x.map((x) => x[0]))
+  //     .filter((x) => x.length),
+  // )
   console.timeEnd()
-  return v.length
+  return 0
 }
+
+// go(input(2024, 16), 94232)
 
 go(
   `###############
