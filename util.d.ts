@@ -625,10 +625,6 @@ declare global {
     function rx(min: number, max: number): Range;
     /** Creates an exclusive range `0..min` or `min..max`. */
     function rx(min: number, max?: number): Range;
-    /** Gets today's year and date in AoC time. */
-    function today(): [year: number, date: number];
-    /** Ensures the input for the specified date is cached. */
-    function checkInput(year: number, date: number): Promise<void>;
     /** Gets the input for the specified date. */
     function input(year: number, date: number): string;
     /**

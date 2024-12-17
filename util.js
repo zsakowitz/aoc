@@ -693,101 +693,111 @@ globalThis.rx = function rx(min, max) {
         return rangeTo(min, max);
     }
 };
-globalThis.today = function today() {
-    const today = new Date(Date.now() + // now
-        new Date().getTimezoneOffset() * 60 * 1000 - // move to UTC
-        5 * 60 * 60 * 1000);
-    return [today.getFullYear(), today.getDate()];
-};
-globalThis.today = today;
-function cache(key, getValue) {
-    if (typeof process == "object") {
-        const file = new URL("./.aoc/" + key, new URL("file://" + process.env.HOME + "/")).pathname;
-        if (fs.existsSync(file)) {
-            return fs.readFileSync(file, "utf8");
+var AOC;
+(function (AOC) {
+    function today() {
+        const today = new Date(Date.now() + // now
+            new Date().getTimezoneOffset() * 60 * 1000 - // move to UTC
+            5 * 60 * 60 * 1000);
+        return [today.getFullYear(), today.getDate()];
+    }
+    AOC.today = today;
+    function validate(year, day) {
+        if (typeof year != "number" ||
+            !ri(2015, 20000).has(year) ||
+            !ri(1, 25).has(day)) {
+            throw new Error("Invalid year or day.");
         }
-        return Promise.resolve(getValue()).then(async (value) => {
-            await fs.promises.mkdir(path.dirname(file), { recursive: true });
-            fs.writeFileSync(file, value);
-            return value;
+    }
+    function cache(key, getValue) {
+        if (typeof process == "object") {
+            const file = new URL("./.aoc/" + key, new URL("file://" + process.env.HOME + "/")).pathname;
+            if (fs.existsSync(file)) {
+                return fs.readFileSync(file, "utf8");
+            }
+            return Promise.resolve(getValue()).then(async (value) => {
+                await fs.promises.mkdir(path.dirname(file), { recursive: true });
+                fs.writeFileSync(file, value);
+                return value;
+            });
+        }
+        if (!(localStorage && typeof localStorage == "object")) {
+            throw new Error("No way to persist data; throwing to avoid hundreds of API calls which will get you blocked.");
+        }
+        const item = localStorage.getItem(".aoc/" + key);
+        if (item != null) {
+            return item;
+        }
+        const val = getValue();
+        if (val instanceof Promise) {
+            throw new Error("Asynchronous loading is only supported in Node.JS.");
+        }
+        localStorage.setItem(".aoc/" + key, val);
+        return val;
+    }
+    async function checkInput(...[year, day]) {
+        validate(year, day);
+        const code = `${year}/${day}/input`;
+        const url = `https://adventofcode.com/${year}/day/${day}/input`;
+        await cache(code, () => {
+            warn `Fetching new input...`;
+            if (typeof XMLHttpRequest == "undefined") {
+                return fetch(url, {
+                    headers: { cookie: process.env.ILOWI_AOC_COOKIE },
+                })
+                    .then((response) => {
+                    if (response.ok)
+                        return response.text();
+                    throw new Error(`Failed to fetch input for ${year}/${day}.`);
+                })
+                    .then((text) => text.trim());
+            }
+            const req = new XMLHttpRequest();
+            req.open("GET", url, false);
+            req.send();
+            if (req.status == 200) {
+                const resp = req.response.trim();
+                localStorage.setItem(code, resp);
+                return resp;
+            }
+            else {
+                throw new Error("getting input failed", req.response);
+            }
         });
     }
-    if (!(localStorage && typeof localStorage == "object")) {
-        throw new Error("No way to persist data; throwing to avoid hundreds of API calls which will get you blocked.");
-    }
-    const item = localStorage.getItem(".aoc/" + key);
-    if (item != null) {
-        return item;
-    }
-    const val = getValue();
-    if (val instanceof Promise) {
-        throw new Error("Asynchronous loading is only supported in Node.JS.");
-    }
-    localStorage.setItem(".aoc/" + key, val);
-    return val;
-}
-globalThis.checkInput = async function (year, day) {
-    if (typeof year != "number" ||
-        !ri(2015, 20000).has(year) ||
-        !ri(1, 25).has(day)) {
-        throw new Error("Invalid year or day.");
-    }
-    const code = `${year}/${day}/input`;
-    const url = `https://adventofcode.com/${year}/day/${day}/input`;
-    await cache(code, () => {
-        warn `Fetching new input...`;
-        if (typeof XMLHttpRequest == "undefined") {
-            return fetch(url, {
-                headers: { cookie: process.env.ILOWI_AOC_COOKIE },
-            })
-                .then((response) => {
-                if (response.ok)
-                    return response.text();
-                throw new Error(`Failed to fetch input for ${year}/${day}.`);
-            })
-                .then((text) => text.trim());
+    AOC.checkInput = checkInput;
+    function input(year = today()[0], day = today()[1]) {
+        if (typeof year != "number" ||
+            !ri(2015, 20000).has(year) ||
+            !ri(1, 25).has(day)) {
+            throw new Error("Invalid year or day.");
         }
-        const req = new XMLHttpRequest();
-        req.open("GET", url, false);
-        req.send();
-        if (req.status == 200) {
-            const resp = req.response.trim();
-            localStorage.setItem(code, resp);
-            return resp;
+        const code = `${year}/${day}/input`;
+        const url = `https://adventofcode.com/${year}/day/${day}/input`;
+        if (typeof process == "object" && arguments.length != 2) {
+            warn `Implicitly using today's input; this will break tomorrow.`;
         }
-        else {
-            throw new Error("getting input failed", req.response);
-        }
-    });
-};
-globalThis.input = function input(year = today()[0], day = today()[1]) {
-    if (typeof year != "number" ||
-        !ri(2015, 20000).has(year) ||
-        !ri(1, 25).has(day)) {
-        throw new Error("Invalid year or day.");
+        return cache(code, () => {
+            if (typeof XMLHttpRequest == "undefined") {
+                throw new Error("Cannot get input synchronously in Node.JS.");
+            }
+            const req = new XMLHttpRequest();
+            req.open("GET", url, false);
+            req.send();
+            if (req.status == 200) {
+                const resp = req.response.trim();
+                localStorage.setItem(code, resp);
+                return resp;
+            }
+            else {
+                throw new Error("getting input failed", req.response);
+            }
+        });
     }
-    const code = `${year}/${day}/input`;
-    const url = `https://adventofcode.com/${year}/day/${day}/input`;
-    if (typeof process == "object" && arguments.length != 2) {
-        warn `Implicitly using today's input; this will break tomorrow.`;
-    }
-    return cache(code, () => {
-        if (typeof XMLHttpRequest == "undefined") {
-            throw new Error("Cannot get input synchronously in Node.JS.");
-        }
-        const req = new XMLHttpRequest();
-        req.open("GET", url, false);
-        req.send();
-        if (req.status == 200) {
-            const resp = req.response.trim();
-            localStorage.setItem(code, resp);
-            return resp;
-        }
-        else {
-            throw new Error("getting input failed", req.response);
-        }
-    });
-};
+    AOC.input = input;
+    Object.assign(globalThis, { input });
+    Object.assign(globalThis, { aoc: AOC });
+})(AOC || (AOC = {}));
 globalThis.t = globalThis.tuple = function (...args) {
     return args;
 };
