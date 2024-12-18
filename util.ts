@@ -464,6 +464,10 @@ RegExp.prototype.c = function () {
   return this
 }
 
+Array.prototype.take = function (n) {
+  return this.slice(0, n)
+}
+
 Array.prototype.bits = function () {
   let n = 0
   let s = 1
@@ -536,8 +540,16 @@ Object.defineProperty(Array.prototype, "last", {
     return this[this.length - 1]
   },
   set(v) {
-    if (this.length == 0) warn`Getting '.last' of empty array.`
+    if (this.length == 0) warn`Setting '.last' of empty array.`
     this[this.length - 1] = v
+  },
+})
+
+Object.defineProperty(Array.prototype, "li", {
+  configurable: true,
+  get() {
+    if (this.length == 0) warn`Getting '.li' of empty array.`
+    return this.length - 1
   },
 })
 
@@ -866,6 +878,15 @@ Object.prototype.r = function (n) {
 Object.prototype.log = function (...args) {
   console.log(this, ...args)
   return this
+}
+
+Map.prototype.gn = function (key) {
+  if (!this.has(key)) throw new Error(`${key} was missing in the map.`)
+  return this.get(key)!
+}
+
+Map.prototype.gnn = function (key) {
+  return nn(this.get(key))
 }
 
 Boolean.prototype.c = function () {
@@ -1235,16 +1256,32 @@ class Point<T = unknown> {
     return new Point(this.x - 1, this.y - 1, this.z, this.g)
   }
 
+  get tl() {
+    return this.lt
+  }
+
   get rt() {
     return new Point(this.x + 1, this.y - 1, this.z, this.g)
+  }
+
+  get tr() {
+    return this.rt
   }
 
   get lb() {
     return new Point(this.x - 1, this.y + 1, this.z, this.g)
   }
 
+  get bl() {
+    return this.lb
+  }
+
   get rb() {
     return new Point(this.x + 1, this.y + 1, this.z, this.g)
+  }
+
+  get br() {
+    return this.rb
   }
 
   n() {
@@ -1321,8 +1358,17 @@ class Point<T = unknown> {
     return this.g!.at(this)
   }
 
+  get vnn(): NonNullable<T> {
+    return nn(this.g!.at(this))
+  }
+
   set v(v: T) {
     this.g!.set(this, v)
+  }
+
+  set vnn(v: T) {
+    warn`Interpreting '.vn=' as '.v='`
+    this.v = v
   }
 
   xy(): string {
@@ -1438,6 +1484,8 @@ globalThis.ij = Object.assign(
   { ring: Point.ring },
 ) as any
 
+type Falsy = false | "" | 0 | 0n | null | undefined
+
 class Grid<T> {
   static of<T>(
     f: Exclude<T, Function> | ((k: Point<T>) => T),
@@ -1546,6 +1594,38 @@ class Grid<T> {
     return this.rows[pt.y]?.[pt.x]!
   }
 
+  get tl() {
+    return new Point(0, 0, undefined, this)
+  }
+
+  get lt() {
+    return this.tl
+  }
+
+  get tr() {
+    return new Point(this.rows[0].li, 0, undefined, this)
+  }
+
+  get rt() {
+    return this.tr
+  }
+
+  get bl() {
+    return new Point(0, this.rows.li, undefined, this)
+  }
+
+  get lb() {
+    return this.bl
+  }
+
+  get br() {
+    return new Point(this.rows.last.li, this.rows.li, undefined, this)
+  }
+
+  get rb() {
+    return this.br
+  }
+
   set(pt: Point, value: T): T {
     this.rows[pt.i]![pt.j] = value
     return value
@@ -1575,6 +1655,16 @@ class Grid<T> {
         row.map((col, j) => f(col, ij(i, j, undefined, this), this)),
       ),
     )
+  }
+
+  linkn(this: Grid<GraphNode<unknown> | Falsy>) {
+    for (const k of this.k()) {
+      if (!k.v) continue
+      for (const n of k.n()) {
+        if (n?.v) k.v.link(n.v, 1)
+      }
+    }
+    return this as Grid<T>
   }
 
   c(this: Grid<T & FnCopy>): Grid<T> {
@@ -2349,6 +2439,8 @@ declare global {
   }
 
   interface ArrayBase<T> {
+    /** Shorthand for `.slice(0, n)`. */
+    take(n: number): T[]
     /** Combines the bits in this array, least-significant first, into a number. */
     bits(this: boolean[]): number
     /** Equivalent to `.map(f).filter(x => x != null)`. */
@@ -2378,6 +2470,8 @@ declare global {
     int(this: FnInt<any>[]): (T extends FnInt<infer U> ? U : never)[]
     /** Returns the last element of this array. */
     get last(): T | X
+    /** Returns the last index of this array. */
+    get li(): number | X
     /**
      * Counts the number of elements which match `f`, or returns `this.length`
      * if none match.
@@ -2570,6 +2664,17 @@ declare global {
     /** Logs this value and returns it. */
     log<T>(this: T, ...args: any[]): T
   }
+
+  interface MapBase<K, V> {
+    /** Equivalent to `.get(key)`, hardcoding the assumption that `key` exists. */
+    gn(key: K): V
+    /** Equivalent to `nn(this.get(key))`. */
+    gnn(key: K): NonNullable<V>
+  }
+
+  interface ReadonlyMap<K, V> extends MapBase<K, V> {}
+
+  interface Map<K, V> extends MapBase<K, V> {}
 
   interface Boolean {
     /** Returns `this`. */

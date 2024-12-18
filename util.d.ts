@@ -49,9 +49,13 @@ declare class Point<T = unknown> {
     get b(): Point<T>;
     get r(): Point<T>;
     get lt(): Point<T>;
+    get tl(): Point<T>;
     get rt(): Point<T>;
+    get tr(): Point<T>;
     get lb(): Point<T>;
+    get bl(): Point<T>;
     get rb(): Point<T>;
+    get br(): Point<T>;
     n(): Point<T>[];
     nf(): Point<T>[];
     add(other: Point, from?: Point): Point<T>;
@@ -72,7 +76,9 @@ declare class Point<T = unknown> {
      */
     idxbrbrbr(): number;
     get v(): T | X;
+    get vnn(): NonNullable<T>;
     set v(v: T);
+    set vnn(v: T);
     xy(): string;
     ij(): string;
 }
@@ -93,6 +99,7 @@ declare class PointSet<T = unknown> {
     perim(): number;
     edges(): number;
 }
+type Falsy = false | "" | 0 | 0n | null | undefined;
 declare class Grid<T> {
     rows: T[][];
     static of<T>(f: Exclude<T, Function> | ((k: Point<T>) => T), rows?: number, cols?: number): Grid<T>;
@@ -107,11 +114,20 @@ declare class Grid<T> {
     tx(): Grid<T>;
     row(i: number, start?: number, end?: number): T[] | X;
     at(pt: Point): T | X;
+    get tl(): Point<T>;
+    get lt(): Point<T>;
+    get tr(): Point<T>;
+    get rt(): Point<T>;
+    get bl(): Point<T>;
+    get lb(): Point<T>;
+    get br(): Point<T>;
+    get rb(): Point<T>;
     set(pt: Point, value: T): T;
     k(): IteratorObject<Point<T>, undefined>;
     [Symbol.iterator](): IteratorObject<Point<T>, undefined, unknown>;
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;
+    linkn(this: Grid<GraphNode<unknown> | Falsy>): Grid<T>;
     c(this: Grid<T & FnCopy>): Grid<T>;
     copyFrom(other: Grid<T>): void;
     draw(this: Grid<string>): void;
@@ -441,6 +457,8 @@ declare global {
         c(): RegExp;
     }
     interface ArrayBase<T> {
+        /** Shorthand for `.slice(0, n)`. */
+        take(n: number): T[];
         /** Combines the bits in this array, least-significant first, into a number. */
         bits(this: boolean[]): number;
         /** Equivalent to `.map(f).filter(x => x != null)`. */
@@ -472,6 +490,8 @@ declare global {
         int(this: FnInt<any>[]): (T extends FnInt<infer U> ? U : never)[];
         /** Returns the last element of this array. */
         get last(): T | X;
+        /** Returns the last index of this array. */
+        get li(): number | X;
         /**
          * Counts the number of elements which match `f`, or returns `this.length`
          * if none match.
@@ -649,6 +669,16 @@ declare global {
         r<T>(this: Extract<T, FnCopy>, n: number): T[];
         /** Logs this value and returns it. */
         log<T>(this: T, ...args: any[]): T;
+    }
+    interface MapBase<K, V> {
+        /** Equivalent to `.get(key)`, hardcoding the assumption that `key` exists. */
+        gn(key: K): V;
+        /** Equivalent to `nn(this.get(key))`. */
+        gnn(key: K): NonNullable<V>;
+    }
+    interface ReadonlyMap<K, V> extends MapBase<K, V> {
+    }
+    interface Map<K, V> extends MapBase<K, V> {
     }
     interface Boolean {
         /** Returns `this`. */

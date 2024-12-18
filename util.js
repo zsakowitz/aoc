@@ -363,6 +363,9 @@ RegExp.prototype.fncounttarget = function (source) {
 RegExp.prototype.c = function () {
     return this;
 };
+Array.prototype.take = function (n) {
+    return this.slice(0, n);
+};
 Array.prototype.bits = function () {
     let n = 0;
     let s = 1;
@@ -431,8 +434,16 @@ Object.defineProperty(Array.prototype, "last", {
     },
     set(v) {
         if (this.length == 0)
-            warn `Getting '.last' of empty array.`;
+            warn `Setting '.last' of empty array.`;
         this[this.length - 1] = v;
+    },
+});
+Object.defineProperty(Array.prototype, "li", {
+    configurable: true,
+    get() {
+        if (this.length == 0)
+            warn `Getting '.li' of empty array.`;
+        return this.length - 1;
     },
 });
 Array.prototype.count = function (f) {
@@ -712,6 +723,14 @@ Object.prototype.r = function (n) {
 Object.prototype.log = function (...args) {
     console.log(this, ...args);
     return this;
+};
+Map.prototype.gn = function (key) {
+    if (!this.has(key))
+        throw new Error(`${key} was missing in the map.`);
+    return this.get(key);
+};
+Map.prototype.gnn = function (key) {
+    return nn(this.get(key));
 };
 Boolean.prototype.c = function () {
     return Boolean(this);
@@ -1014,14 +1033,26 @@ class Point {
     get lt() {
         return new Point(this.x - 1, this.y - 1, this.z, this.g);
     }
+    get tl() {
+        return this.lt;
+    }
     get rt() {
         return new Point(this.x + 1, this.y - 1, this.z, this.g);
+    }
+    get tr() {
+        return this.rt;
     }
     get lb() {
         return new Point(this.x - 1, this.y + 1, this.z, this.g);
     }
+    get bl() {
+        return this.lb;
+    }
     get rb() {
         return new Point(this.x + 1, this.y + 1, this.z, this.g);
+    }
+    get br() {
+        return this.rb;
     }
     n() {
         return [this.t, this.r, this.b, this.l];
@@ -1070,8 +1101,15 @@ class Point {
     get v() {
         return this.g.at(this);
     }
+    get vnn() {
+        return nn(this.g.at(this));
+    }
     set v(v) {
         this.g.set(this, v);
+    }
+    set vnn(v) {
+        warn `Interpreting '.vn=' as '.v='`;
+        this.v = v;
     }
     xy() {
         return this.x + "," + this.y;
@@ -1239,6 +1277,30 @@ class Grid {
     at(pt) {
         return this.rows[pt.y]?.[pt.x];
     }
+    get tl() {
+        return new Point(0, 0, undefined, this);
+    }
+    get lt() {
+        return this.tl;
+    }
+    get tr() {
+        return new Point(this.rows[0].li, 0, undefined, this);
+    }
+    get rt() {
+        return this.tr;
+    }
+    get bl() {
+        return new Point(0, this.rows.li, undefined, this);
+    }
+    get lb() {
+        return this.bl;
+    }
+    get br() {
+        return new Point(this.rows.last.li, this.rows.li, undefined, this);
+    }
+    get rb() {
+        return this.br;
+    }
     set(pt, value) {
         this.rows[pt.i][pt.j] = value;
         return value;
@@ -1262,6 +1324,17 @@ class Grid {
     }
     map(f) {
         return new Grid(this.rows.map((row, i) => row.map((col, j) => f(col, ij(i, j, undefined, this), this))));
+    }
+    linkn() {
+        for (const k of this.k()) {
+            if (!k.v)
+                continue;
+            for (const n of k.n()) {
+                if (n?.v)
+                    k.v.link(n.v, 1);
+            }
+        }
+        return this;
     }
     c() {
         return new Grid(this.rows.c());
