@@ -405,10 +405,34 @@ Array.prototype.any = function (f) {
 Array.prototype.fncounttarget = function (source) {
     return this.sum((target) => target.fncounttarget(source));
 };
+Array.prototype.fx = function (f) {
+    return this.find((x, i) => f.fnfilter(x, i));
+};
+Array.prototype.fxnn = function (f) {
+    return nn(this.fx(f));
+};
+Array.prototype.fi = function (f) {
+    let i = 0;
+    for (const v of this) {
+        if (f.fnfilter(v, i))
+            return i;
+        i++;
+    }
+    return -1;
+};
+Array.prototype.finn = function (f) {
+    let i = 0;
+    for (const v of this) {
+        if (f.fnfilter(v, i))
+            return i;
+        i++;
+    }
+    throw new Error("Reached end of iterator when calling .finn()");
+};
 Array.prototype.f = function (f) {
     return this.filter((x, i) => f.fnfilter(x, i));
 };
-Array.prototype.fi = function (f) {
+Array.prototype.fp = function (f) {
     const output = Array(this.length);
     for (let i = 0; i < this.length; i++) {
         if (!(i in this))
@@ -522,6 +546,9 @@ Array.prototype.mid = function () {
 Array.prototype.key = function (key) {
     return this.map((x) => x[key]);
 };
+Array.prototype.mk = function (key) {
+    return this.map((x) => x.map((y) => y[key]));
+};
 Array.prototype.wo = function (index) {
     return this.toSpliced(index, 1);
 };
@@ -620,6 +647,10 @@ Array.prototype.linkr = function (props) {
     this.map((x) => x[0]).link(props);
     return this;
 };
+Array.prototype.zip = function (...others) {
+    const length = this.length.min(...others.map((x) => x.length));
+    return this.take(length).map((a, i) => t(a, ...others.map((x) => x[i])));
+};
 Array.prototype.s = function () {
     return this.sort((a, b) => a - b);
 };
@@ -695,6 +726,30 @@ Iterator.prototype.f = function* (f) {
             yield v;
         i++;
     }
+};
+Iterator.prototype.fx = function (f) {
+    return this.find((x, i) => f.fnfilter(x, i));
+};
+Iterator.prototype.fxnn = function (f) {
+    return nn(this.fx(f));
+};
+Iterator.prototype.fi = function (f) {
+    let i = 0;
+    for (const v of this) {
+        if (f.fnfilter(v, i))
+            return i;
+        i++;
+    }
+    return -1;
+};
+Iterator.prototype.finn = function (f) {
+    let i = 0;
+    for (const v of this) {
+        if (f.fnfilter(v, i))
+            return i;
+        i++;
+    }
+    throw new Error("Reached end of iterator when calling .finn()");
 };
 Iterator.prototype.arr = function () {
     return this.toArray();
@@ -1298,6 +1353,9 @@ class Grid {
     }
     at(pt) {
         return this.rows[pt.y]?.[pt.x];
+    }
+    atnn(pt) {
+        return nn(this.at(pt));
     }
     get tl() {
         return new Point(0, 0, undefined, this);

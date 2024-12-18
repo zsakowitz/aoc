@@ -2,7 +2,7 @@ import "../util.js"
 
 const g = input(2024, 6).grid()
 const ps = new PointSet()
-let q = nn(g.k().find((x) => x.v == "^"))
+let q = g.k().fxnn((x) => x.v == "^")
 let d = pt(0, -1)
 
 while (q.exists()) {
@@ -18,9 +18,9 @@ while (q.exists()) {
 
 ps.size.check(5404)
 
-function hasLoop(/** @type {ReturnType<string['grid']>} */ g) {
+function hasLoop(/** @type {Grid<string>} */ g) {
   const ps = new Set()
-  let q = g.k().find((x) => x.v == "^")
+  let q = g.k().fx("^")
   if (q == null) return false
   let d = pt(0, -1)
 
@@ -41,6 +41,7 @@ function hasLoop(/** @type {ReturnType<string['grid']>} */ g) {
 }
 
 const g2 = input(2024, 6).grid()
+
 ps.k()
   .count((k) => {
     const a = g2.c()

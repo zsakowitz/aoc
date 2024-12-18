@@ -511,11 +511,37 @@ Array.prototype.fncounttarget = function (source) {
   return this.sum((target) => target.fncounttarget(source))
 }
 
+Array.prototype.fx = function (f) {
+  return this.find((x, i) => f.fnfilter(x, i))
+}
+
+Array.prototype.fxnn = function (f) {
+  return nn(this.fx(f))
+}
+
+Array.prototype.fi = function (f) {
+  let i = 0
+  for (const v of this) {
+    if (f.fnfilter(v, i)) return i
+    i++
+  }
+  return -1
+}
+
+Array.prototype.finn = function (f) {
+  let i = 0
+  for (const v of this) {
+    if (f.fnfilter(v, i)) return i
+    i++
+  }
+  throw new Error("Reached end of iterator when calling .finn()")
+}
+
 Array.prototype.f = function (f) {
   return this.filter((x, i) => f.fnfilter(x, i))
 }
 
-Array.prototype.fi = function (f) {
+Array.prototype.fp = function (f) {
   const output = Array(this.length)
   for (let i = 0; i < this.length; i++) {
     if (!(i in this)) continue
@@ -655,6 +681,10 @@ Array.prototype.key = function (key) {
   return this.map((x) => x[key])
 }
 
+Array.prototype.mk = function (key) {
+  return this.map((x) => x.map((y) => y[key])) as any
+}
+
 Array.prototype.wo = function (index) {
   return this.toSpliced(index, 1)
 }
@@ -774,6 +804,13 @@ Array.prototype.linkr = function (props) {
   return this as any
 }
 
+Array.prototype.zip = function (...others) {
+  const length = this.length.min(...others.map((x) => x.length))
+  return this.take(length).map((a, i) =>
+    t(a, ...others.map((x) => x[i])),
+  ) as any
+}
+
 interface LinkProps {
   /** The weight to assign each created edge. Defaults to `1`. */
   weight?: number
@@ -864,6 +901,32 @@ Iterator.prototype.f = function* (f) {
     if (f.fnfilter(v, i)) yield v
     i++
   }
+}
+
+Iterator.prototype.fx = function (f) {
+  return this.find((x, i) => f.fnfilter(x, i))
+}
+
+Iterator.prototype.fxnn = function (f) {
+  return nn(this.fx(f))
+}
+
+Iterator.prototype.fi = function (f) {
+  let i = 0
+  for (const v of this) {
+    if (f.fnfilter(v, i)) return i
+    i++
+  }
+  return -1
+}
+
+Iterator.prototype.finn = function (f) {
+  let i = 0
+  for (const v of this) {
+    if (f.fnfilter(v, i)) return i
+    i++
+  }
+  throw new Error("Reached end of iterator when calling .finn()")
 }
 
 Iterator.prototype.arr = function () {
@@ -1636,6 +1699,10 @@ class Grid<T> {
 
   at(pt: Point): T | X {
     return this.rows[pt.y]?.[pt.x]!
+  }
+
+  atnn(pt: Point): NonNullable<T> {
+    return nn(this.at(pt))
   }
 
   get tl() {
@@ -2497,13 +2564,21 @@ declare global {
     any(f: FnFilter<T>): boolean
     /** Calls `.fncounttarget(source)` on each element, and returns the sum. */
     fncounttarget(this: readonly FnStrCountTarget[], source: string): number
+    /** Finds the first element which matches the filter `f`. */
+    fx(f: FnFilter<T>): T | X
+    /** Finds the first element which matches the filter `f`, and asserts it is non-null. */
+    fxnn(f: FnFilter<T>): NonNullable<T>
+    /** Finds the index of the first element which matches the filter `f`. */
+    fi(f: FnFilter<T>): number
+    /** Finds the index of the first element which matches the filter `f`, and asserts it is not `-1`. */
+    finn(f: FnFilter<T>): number
     /** Returns elements which match the filter `f`. */
     f(f: FnFilter<T>): T[]
     /**
      * Returns elements which match the filter `f`, but preserves indices by
      * creating a sparse array.
      */
-    fi(f: FnFilter<T>): T[]
+    fp(f: FnFilter<T>): T[]
     /** Shorthand for `.keys()`. */
     k(): IteratorObject<number>
     /** Shorthand for `.values()`. */
@@ -2569,6 +2644,11 @@ declare global {
     mid(): T | X
     /** Equivalent to `.map(x => x[key])`. */
     key<K extends keyof T>(key: K): T[K][]
+    /** Equivalent to `.map(x => x.map(y => y[key]))`. */
+    mk<T extends readonly any[], K extends keyof T[number]>(
+      this: readonly T[],
+      key: K,
+    ): { [L in keyof T]: T[L][K] }[]
     /**
      * Copies this array, then removes the specified index and returns the new
      * array.
@@ -2628,6 +2708,10 @@ declare global {
       this: readonly (readonly [GraphNode<unknown>, ...unknown[]])[],
       props?: LinkProps,
     ): this
+    /** Zips the elements of this array with `other`, returning an array containing tuples containing one element from each array. The new array's length is that of the shorter of either array. */
+    zip<A extends readonly any[][]>(
+      ...others: A
+    ): [T, ...{ [K in keyof A]: A[K][number] }][]
   }
 
   interface ReadonlyArray<T> extends ArrayBase<T> {}
@@ -2675,6 +2759,14 @@ declare global {
     i(f: FnFilter<T>): number
     /** Filters by `f`. */
     f(f: FnFilter<T>): IteratorObject<T>
+    /** Finds the first element which matches `f`. */
+    fx(f: FnFilter<T>): T | X
+    /** Finds the first element which matches `f`, and asserts it is non-null. */
+    fxnn(f: FnFilter<T>): NonNullable<T>
+    /** Finds the index of the first element which matches the filter `f`. */
+    fi(f: FnFilter<T>): number
+    /** Finds the index of the first element which matches the filter `f`, and asserts it is not `-1`. */
+    finn(f: FnFilter<T>): number
     /** Collects this iterator's values into an array. */
     arr(): T[]
     /** Iterates over the Cartesian product of `this` and `other`. */

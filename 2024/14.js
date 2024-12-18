@@ -38,8 +38,4 @@ function m(/** @type {number[][]} */ a) {
   return Object.entries(b).length == 500
 }
 
-nn(
-  ints()
-    .acc(([a], n) => t(i(a), n), t(a, 0))
-    .find(([a]) => m(a)),
-)[1].check(7036)
+ints().acc(i, a).finn(m).check(7036)

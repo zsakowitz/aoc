@@ -5,7 +5,7 @@ const g = input(2023, 3).grid()
 g.rows
   .flatMap((row, j) =>
     row
-      .fi((x, i) => x.is(/\d/) && !row[i - 1]?.is(/\d/))
+      .fp((x, i) => x.is(/\d/) && !row[i - 1]?.is(/\d/))
       .map((_, i) => {
         let a = i
         while (row[i + 1]?.is(/\d/)) {

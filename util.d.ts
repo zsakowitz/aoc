@@ -122,6 +122,7 @@ declare class Grid<T> {
     tx(): Grid<T>;
     row(i: number, start?: number, end?: number): T[] | X;
     at(pt: Point): T | X;
+    atnn(pt: Point): NonNullable<T>;
     get tl(): Point<T>;
     get lt(): Point<T>;
     get tr(): Point<T>;
@@ -481,13 +482,21 @@ declare global {
         any(f: FnFilter<T>): boolean;
         /** Calls `.fncounttarget(source)` on each element, and returns the sum. */
         fncounttarget(this: readonly FnStrCountTarget[], source: string): number;
+        /** Finds the first element which matches the filter `f`. */
+        fx(f: FnFilter<T>): T | X;
+        /** Finds the first element which matches the filter `f`, and asserts it is non-null. */
+        fxnn(f: FnFilter<T>): NonNullable<T>;
+        /** Finds the index of the first element which matches the filter `f`. */
+        fi(f: FnFilter<T>): number;
+        /** Finds the index of the first element which matches the filter `f`, and asserts it is not `-1`. */
+        finn(f: FnFilter<T>): number;
         /** Returns elements which match the filter `f`. */
         f(f: FnFilter<T>): T[];
         /**
          * Returns elements which match the filter `f`, but preserves indices by
          * creating a sparse array.
          */
-        fi(f: FnFilter<T>): T[];
+        fp(f: FnFilter<T>): T[];
         /** Shorthand for `.keys()`. */
         k(): IteratorObject<number>;
         /** Shorthand for `.values()`. */
@@ -550,6 +559,10 @@ declare global {
         mid(): T | X;
         /** Equivalent to `.map(x => x[key])`. */
         key<K extends keyof T>(key: K): T[K][];
+        /** Equivalent to `.map(x => x.map(y => y[key]))`. */
+        mk<T extends readonly any[], K extends keyof T[number]>(this: readonly T[], key: K): {
+            [L in keyof T]: T[L][K];
+        }[];
         /**
          * Copies this array, then removes the specified index and returns the new
          * array.
@@ -608,6 +621,10 @@ declare global {
         link(this: readonly GraphNode<unknown>[], props?: LinkProps): this;
         /** Links the first elements of each element of this array together. */
         linkr(this: readonly (readonly [GraphNode<unknown>, ...unknown[]])[], props?: LinkProps): this;
+        /** Zips the elements of this array with `other`, returning an array containing tuples containing one element from each array. The new array's length is that of the shorter of either array. */
+        zip<A extends readonly any[][]>(...others: A): [T, ...{
+            [K in keyof A]: A[K][number];
+        }][];
     }
     interface ReadonlyArray<T> extends ArrayBase<T> {
     }
@@ -651,6 +668,14 @@ declare global {
         i(f: FnFilter<T>): number;
         /** Filters by `f`. */
         f(f: FnFilter<T>): IteratorObject<T>;
+        /** Finds the first element which matches `f`. */
+        fx(f: FnFilter<T>): T | X;
+        /** Finds the first element which matches `f`, and asserts it is non-null. */
+        fxnn(f: FnFilter<T>): NonNullable<T>;
+        /** Finds the index of the first element which matches the filter `f`. */
+        fi(f: FnFilter<T>): number;
+        /** Finds the index of the first element which matches the filter `f`, and asserts it is not `-1`. */
+        finn(f: FnFilter<T>): number;
         /** Collects this iterator's values into an array. */
         arr(): T[];
         /** Iterates over the Cartesian product of `this` and `other`. */

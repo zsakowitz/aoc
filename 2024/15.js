@@ -4,7 +4,7 @@ const i0 = input(2024, 15).split("\n\n")
 const g = i0[0].grid()
 const ss = i0[1].dirs()
 for (const d of ss) {
-  const p = nn(g.k().find((k) => k.v == "@"))
+  const p = g.k().fxnn("@")
   let q = p.c()
   let i = 0
   while (true) {
