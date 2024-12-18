@@ -1,8 +1,24 @@
 declare const _: number | undefined;
 type X = Exclude<typeof _, number>;
 declare function rangeTo(a: number, b: number): Generator<number, void, unknown> & {
+    /** Checks if this `Range` contains the given value. */
     has: (x: number) => boolean;
+    /** Checks if this `Range` contains the given value. */
     fnfilter: (x: number) => boolean;
+    /**
+     * Performs binary search to find a number `n` in this range. The function
+     * `f` is expected to:
+     *
+     * - Return `0` if the value of `n` matches
+     * - Return `1` if the value of `n` is definitely too high
+     * - Return `-1` if the value of `n` is too low, or might be fine
+     *
+     * If `f` exclusively returns `-1` and `1`, `.search(f)` will return the
+     * value `n` such that `f(n) == -1 && f(n+1) == 1`.
+     *
+     * On empty or invalid ranges, returns the lower bound.
+     */
+    search(f: (n: number) => -1 | 0 | 1): number;
 };
 type Range = ReturnType<typeof rangeTo>;
 type Ring<T> = [value: T, dir: Point, l: Ring<T>, r: Ring<T>];

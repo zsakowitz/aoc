@@ -869,7 +869,44 @@ function rangeTo(a: number, b: number) {
         yield i
       }
     })(),
-    { has, fnfilter: has },
+    {
+      /** Checks if this `Range` contains the given value. */
+      has,
+      /** Checks if this `Range` contains the given value. */
+      fnfilter: has,
+      /**
+       * Performs binary search to find a number `n` in this range. The function
+       * `f` is expected to:
+       *
+       * - Return `0` if the value of `n` matches
+       * - Return `1` if the value of `n` is definitely too high
+       * - Return `-1` if the value of `n` is too low, or might be fine
+       *
+       * If `f` exclusively returns `-1` and `1`, `.search(f)` will return the
+       * value `n` such that `f(n) == -1 && f(n+1) == 1`.
+       *
+       * On empty or invalid ranges, returns the lower bound.
+       */
+      search(f: (n: number) => -1 | 0 | 1): number {
+        let min = a
+        let max = b
+
+        while (min < max - 1) {
+          const mid = Math.floor((min + max) / 2)
+          const ret = f(mid)
+
+          if (ret == 0) {
+            return mid
+          } else if (ret < 0) {
+            min = mid
+          } else {
+            max = mid
+          }
+        }
+
+        return min
+      },
+    },
   )
 }
 
