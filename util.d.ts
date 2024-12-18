@@ -273,6 +273,10 @@ declare global {
          */
         bits(): Generator<boolean, never>;
     }
+    interface BigInt {
+        /** Checks this bigint against an expected value, throwing on error. */
+        check(expected: bigint): bigint;
+    }
     interface String {
         /** Parses this string as a number. */
         int(): number;
@@ -529,6 +533,10 @@ declare global {
         min(this: readonly number[]): number;
         /** Finds the maximum value. */
         max(this: readonly number[]): number;
+        /** Finds the minimum value. */
+        bigmin(this: readonly bigint[]): bigint;
+        /** Finds the maximum value. */
+        bigmax(this: readonly bigint[]): bigint;
         /** Returns the indices of each element and their values. */
         enum(): [index: number, value: T][];
     }

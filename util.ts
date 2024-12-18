@@ -178,6 +178,17 @@ Number.prototype.bits = function* (this: number) {
   }
 }
 
+BigInt.prototype.check = function (this: bigint, expected) {
+  if (this !== expected) {
+    throw new Error(
+      `${colors.red}FAILED: expected ${expected} but got ${this}${colors.reset}`,
+    )
+  } else {
+    console.log(`${colors.green}PASSED: ${expected}${colors.reset}`)
+  }
+  return BigInt(this)
+}
+
 String.prototype.int = function () {
   return +this
 }
@@ -670,6 +681,22 @@ Array.prototype.min = function () {
 
 Array.prototype.max = function () {
   return Math.max(...this)
+}
+
+Array.prototype.bigmin = function () {
+  if (this.length == 0) {
+    throw new Error("Cannot get minimum value of empty bigint array.")
+  }
+
+  return this.reduce((a, b) => (a < b ? a : b))
+}
+
+Array.prototype.bigmax = function () {
+  if (this.length == 0) {
+    throw new Error("Cannot get maximum value of empty bigint array.")
+  }
+
+  return this.reduce((a, b) => (a > b ? a : b))
 }
 
 Array.prototype.enum = function () {
@@ -2060,6 +2087,11 @@ declare global {
     bits(): Generator<boolean, never>
   }
 
+  interface BigInt {
+    /** Checks this bigint against an expected value, throwing on error. */
+    check(expected: bigint): bigint
+  }
+
   interface String {
     /** Parses this string as a number. */
     int(): number
@@ -2328,6 +2360,10 @@ declare global {
     min(this: readonly number[]): number
     /** Finds the maximum value. */
     max(this: readonly number[]): number
+    /** Finds the minimum value. */
+    bigmin(this: readonly bigint[]): bigint
+    /** Finds the maximum value. */
+    bigmax(this: readonly bigint[]): bigint
     /** Returns the indices of each element and their values. */
     enum(): [index: number, value: T][]
   }

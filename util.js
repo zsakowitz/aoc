@@ -142,6 +142,15 @@ Number.prototype.bits = function* () {
         n >>= 1;
     }
 };
+BigInt.prototype.check = function (expected) {
+    if (this !== expected) {
+        throw new Error(`${colors.red}FAILED: expected ${expected} but got ${this}${colors.reset}`);
+    }
+    else {
+        console.log(`${colors.green}PASSED: ${expected}${colors.reset}`);
+    }
+    return BigInt(this);
+};
 String.prototype.int = function () {
     return +this;
 };
@@ -542,6 +551,18 @@ Array.prototype.min = function () {
 };
 Array.prototype.max = function () {
     return Math.max(...this);
+};
+Array.prototype.bigmin = function () {
+    if (this.length == 0) {
+        throw new Error("Cannot get minimum value of empty bigint array.");
+    }
+    return this.reduce((a, b) => (a < b ? a : b));
+};
+Array.prototype.bigmax = function () {
+    if (this.length == 0) {
+        throw new Error("Cannot get maximum value of empty bigint array.");
+    }
+    return this.reduce((a, b) => (a > b ? a : b));
 };
 Array.prototype.enum = function () {
     return this.values().enum().toArray();
