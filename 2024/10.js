@@ -5,7 +5,7 @@ input(2024, 10)
   .grid()
   .int()
   .k()
-  .filter((p) => +p.v == 0)
+  .f(0)
   .sum((k) => {
     let p = [k]
     for (let n = 1; n <= 9; n++) {
@@ -28,7 +28,7 @@ input(2024, 10)
   .grid()
   .int()
   .k()
-  .filter((p) => p.v == 0)
+  .f(0)
   .sum((k) => {
     let p = [[k]]
     for (let n = 1; n <= 9; n++) {

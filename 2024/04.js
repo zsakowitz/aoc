@@ -3,7 +3,7 @@ import "../util.js"
 // p1
 const i = input(2024, 4)
 
-!(
+;(
   i
     .grid()
     .k()
