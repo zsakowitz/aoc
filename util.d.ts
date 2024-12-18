@@ -267,6 +267,11 @@ declare global {
         nbal(base: FnAsNumberBase): string;
         /** Returns the `this`th capture group from the passed regex. */
         fnregexcapture(x: RegExpExecArray): string | X;
+        /**
+         * Returns an iterator over the bits of this number, least-significant bit
+         * first.
+         */
+        bits(): Generator<boolean, never>;
     }
     interface String {
         /** Parses this string as a number. */
@@ -401,6 +406,8 @@ declare global {
         c(): RegExp;
     }
     interface ArrayBase<T> {
+        /** Combines the bits in this array, least-significant first, into a number. */
+        bits(this: boolean[]): number;
         /** Equivalent to `.map(f).filter(x => x != null)`. */
         mnn<U>(f: (value: T, index: number, array: T) => U): NonNullable<U>[];
         /** Returns a string created from `id`ing all nested objects. */

@@ -167,6 +167,17 @@ Number.prototype.fnregexcapture = function (array) {
   return array[+this]
 }
 
+Number.prototype.bits = function* (this: number) {
+  let n = Math.floor(this)
+  if (!Number.isSafeInteger(n)) {
+    warn`Calling .bits() on a non-integer.`
+  }
+  while (true) {
+    yield n % 2 == 1
+    n >>= 1
+  }
+}
+
 String.prototype.int = function () {
   return +this
 }
@@ -414,6 +425,16 @@ RegExp.prototype.fncounttarget = function (source) {
 
 RegExp.prototype.c = function () {
   return this
+}
+
+Array.prototype.bits = function () {
+  let n = 0
+  let s = 1
+  for (const x of this) {
+    n += s * +x
+    s *= 2
+  }
+  return n
 }
 
 Array.prototype.mnn = function (f) {
@@ -2032,6 +2053,11 @@ declare global {
     nbal(base: FnAsNumberBase): string
     /** Returns the `this`th capture group from the passed regex. */
     fnregexcapture(x: RegExpExecArray): string | X
+    /**
+     * Returns an iterator over the bits of this number, least-significant bit
+     * first.
+     */
+    bits(): Generator<boolean, never>
   }
 
   interface String {
@@ -2176,6 +2202,8 @@ declare global {
   }
 
   interface ArrayBase<T> {
+    /** Combines the bits in this array, least-significant first, into a number. */
+    bits(this: boolean[]): number
     /** Equivalent to `.map(f).filter(x => x != null)`. */
     mnn<U>(f: (value: T, index: number, array: T) => U): NonNullable<U>[]
     /** Returns a string created from `id`ing all nested objects. */
