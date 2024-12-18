@@ -208,8 +208,8 @@ String.prototype.c = function () {
     return "" + this;
 };
 String.prototype.on = function (label) {
-    const l = Array.isArray(label)
-        ? String.raw({ raw: label }, ...[].slice.call(arguments, 1))
+    const l = Array.isArray(label) ?
+        String.raw({ raw: label }, ...[].slice.call(arguments, 1))
         : label;
     return this.split(l);
 };
@@ -496,7 +496,16 @@ Array.prototype.tx = function () {
     return Array.from({ length: this.reduce((a, b) => Math.max(a, b.length), 0) }, (_, i) => this.map((x) => x[i]));
 };
 Array.prototype.w = function (n) {
+    if (this.length < n) {
+        return [];
+    }
     return Array.from({ length: Math.max(0, this.length - n + 1) }, (_, i) => this.slice(i, i + n));
+};
+Array.prototype.wc = function (n) {
+    if (this.length < n) {
+        return [];
+    }
+    return this.map((_, i) => Array.from({ length: n }, (_, j) => this[(i + j) % this.length]));
 };
 Array.prototype.sd = function () {
     return this.w(2).map(([a, b]) => a.sd(b));
@@ -597,6 +606,19 @@ Array.prototype.bigmax = function () {
 };
 Array.prototype.enum = function () {
     return this.values().enum().toArray();
+};
+Array.prototype.link = function ({ weight = 1, uni = false, noWrap = false, } = {}) {
+    const windows = noWrap || this.length <= 2 ? this.w(2) : this.wc(2);
+    for (const [a, b] of windows) {
+        a.link(b, weight);
+        if (!uni)
+            b.link(a, weight);
+    }
+    return this;
+};
+Array.prototype.linkr = function (props) {
+    this.map((x) => x[0]).link(props);
+    return this;
 };
 Array.prototype.s = function () {
     return this.sort((a, b) => a - b);
@@ -1325,13 +1347,13 @@ class Grid {
     map(f) {
         return new Grid(this.rows.map((row, i) => row.map((col, j) => f(col, ij(i, j, undefined, this), this))));
     }
-    linkn() {
+    linkn(weight = 1) {
         for (const k of this.k()) {
             if (!k.v)
                 continue;
             for (const n of k.n()) {
                 if (n?.v)
-                    k.v.link(n.v, 1);
+                    k.v.link(n.v, weight);
             }
         }
         return this;

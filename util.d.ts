@@ -1,5 +1,13 @@
 declare const _: number | undefined;
 type X = Exclude<typeof _, number>;
+interface LinkProps {
+    /** The weight to assign each created edge. Defaults to `1`. */
+    weight?: number;
+    /** If enabled, only creates unidirectional forward edges (in [A B C], A->B, B->C, C->A). */
+    uni?: boolean;
+    /** If `true`, does not connect the edges of the array. */
+    noWrap?: boolean;
+}
 declare function rangeTo(a: number, b: number): Generator<number, void, unknown> & {
     /** Checks if this `Range` contains the given value. */
     has: (x: number) => boolean;
@@ -127,7 +135,7 @@ declare class Grid<T> {
     [Symbol.iterator](): IteratorObject<Point<T>, undefined, unknown>;
     flat(): T[];
     map<U>(f: (value: T, index: Point<T>, grid: Grid<T>) => U): Grid<U>;
-    linkn(this: Grid<GraphNode<unknown> | Falsy>): Grid<T>;
+    linkn(this: Grid<GraphNode<unknown> | Falsy>, weight?: number): Grid<T>;
     c(this: Grid<T & FnCopy>): Grid<T>;
     copyFrom(other: Grid<T>): void;
     draw(this: Grid<string>): void;
@@ -528,6 +536,12 @@ declare global {
         w(n: 3): [T, T, T][];
         /** Returns all contiguous windows of `n` values in this array. */
         w(n: number): T[][];
+        /** Returns all pairs in this array, wrapping to include the last element followed by the first element. */
+        wc(n: 2): [T, T][];
+        /** Returns all triplets in this array, wrapping such that an array [A B C D] will return [A B C] [B C D] [C D A] [D A B]. */
+        wc(n: 3): [T, T, T][];
+        /** Returns all windows of `n` values in this array, including wrapping around. */
+        wc(n: number): T[][];
         /** Takes the signed difference between each pair of numbers. */
         sd(this: FnSd[]): T[];
         /** Takes the unsigned difference between each pair of numbers. */
@@ -590,6 +604,10 @@ declare global {
         bigmax(this: readonly bigint[]): bigint;
         /** Returns the indices of each element and their values. */
         enum(): [index: number, value: T][];
+        /** Links all nodes in this array together. */
+        link(this: readonly GraphNode<unknown>[], props?: LinkProps): this;
+        /** Links the first elements of each element of this array together. */
+        linkr(this: readonly (readonly [GraphNode<unknown>, ...unknown[]])[], props?: LinkProps): this;
     }
     interface ReadonlyArray<T> extends ArrayBase<T> {
     }

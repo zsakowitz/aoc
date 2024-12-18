@@ -263,8 +263,9 @@ String.prototype.c = function () {
 }
 
 String.prototype.on = function (label) {
-  const l = Array.isArray(label)
-    ? String.raw({ raw: label }, ...[].slice.call(arguments, 1))
+  const l =
+    Array.isArray(label) ?
+      String.raw({ raw: label }, ...[].slice.call(arguments, 1))
     : (label as string)
 
   return this.split(l)
@@ -618,8 +619,20 @@ Array.prototype.tx = function () {
 }
 
 Array.prototype.w = function <T>(this: T[], n: number) {
+  if (this.length < n) {
+    return []
+  }
   return Array.from({ length: Math.max(0, this.length - n + 1) }, (_, i) =>
     this.slice(i, i + n),
+  )
+} as any
+
+Array.prototype.wc = function <T>(this: T[], n: number) {
+  if (this.length < n) {
+    return []
+  }
+  return this.map((_, i) =>
+    Array.from({ length: n }, (_, j) => this[(i + j) % this.length]),
   )
 } as any
 
@@ -739,6 +752,37 @@ Array.prototype.bigmax = function () {
 
 Array.prototype.enum = function () {
   return this.values().enum().toArray()
+}
+
+Array.prototype.link = function ({
+  weight = 1,
+  uni = false,
+  noWrap = false,
+} = {}) {
+  const windows = noWrap || this.length <= 2 ? this.w(2) : this.wc(2)
+
+  for (const [a, b] of windows) {
+    a.link(b, weight)
+    if (!uni) b.link(a, weight)
+  }
+
+  return this as any
+}
+
+Array.prototype.linkr = function (props) {
+  this.map((x) => x[0]).link(props)
+  return this as any
+}
+
+interface LinkProps {
+  /** The weight to assign each created edge. Defaults to `1`. */
+  weight?: number
+
+  /** If enabled, only creates unidirectional forward edges (in [A B C], A->B, B->C, C->A). */
+  uni?: boolean
+
+  /** If `true`, does not connect the edges of the array. */
+  noWrap?: boolean
 }
 
 Array.prototype.s = function () {
@@ -1657,11 +1701,11 @@ class Grid<T> {
     )
   }
 
-  linkn(this: Grid<GraphNode<unknown> | Falsy>) {
+  linkn(this: Grid<GraphNode<unknown> | Falsy>, weight = 1) {
     for (const k of this.k()) {
       if (!k.v) continue
       for (const n of k.n()) {
-        if (n?.v) k.v.link(n.v, 1)
+        if (n?.v) k.v.link(n.v, weight)
       }
     }
     return this as Grid<T>
@@ -2511,6 +2555,12 @@ declare global {
     w(n: 3): [T, T, T][]
     /** Returns all contiguous windows of `n` values in this array. */
     w(n: number): T[][]
+    /** Returns all pairs in this array, wrapping to include the last element followed by the first element. */
+    wc(n: 2): [T, T][]
+    /** Returns all triplets in this array, wrapping such that an array [A B C D] will return [A B C] [B C D] [C D A] [D A B]. */
+    wc(n: 3): [T, T, T][]
+    /** Returns all windows of `n` values in this array, including wrapping around. */
+    wc(n: number): T[][]
     /** Takes the signed difference between each pair of numbers. */
     sd(this: FnSd[]): T[]
     /** Takes the unsigned difference between each pair of numbers. */
@@ -2571,6 +2621,13 @@ declare global {
     bigmax(this: readonly bigint[]): bigint
     /** Returns the indices of each element and their values. */
     enum(): [index: number, value: T][]
+    /** Links all nodes in this array together. */
+    link(this: readonly GraphNode<unknown>[], props?: LinkProps): this
+    /** Links the first elements of each element of this array together. */
+    linkr(
+      this: readonly (readonly [GraphNode<unknown>, ...unknown[]])[],
+      props?: LinkProps,
+    ): this
   }
 
   interface ReadonlyArray<T> extends ArrayBase<T> {}
