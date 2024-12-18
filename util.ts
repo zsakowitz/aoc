@@ -1603,7 +1603,7 @@ class Grid<T> {
   }
 
   get tr() {
-    return new Point(this.rows[0].li, 0, undefined, this)
+    return new Point(this.rows[0]!.li!, 0, undefined, this)
   }
 
   get rt() {
@@ -1611,7 +1611,7 @@ class Grid<T> {
   }
 
   get bl() {
-    return new Point(0, this.rows.li, undefined, this)
+    return new Point(0, this.rows.li!, undefined, this)
   }
 
   get lb() {
@@ -1619,7 +1619,7 @@ class Grid<T> {
   }
 
   get br() {
-    return new Point(this.rows.last.li, this.rows.li, undefined, this)
+    return new Point(this.rows.last.li!, this.rows.li!, undefined, this)
   }
 
   get rb() {
