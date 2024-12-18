@@ -1,8 +1,6 @@
 import "../util.js"
 
-const i = input(2024, 18)
-  .lines()
-  .map((x) => x.xy())
+const i = input(2024, 18).lxy()
 
 function go(/** @type {number} */ limit) {
   const g = Grid.of(true, 71)

@@ -324,6 +324,10 @@ declare global {
         chars(): string[];
         /** Splits this string on every newline. */
         lines(): string[];
+        /** Parses all lines as points in `x,y` notation. */
+        lxy(): Point[];
+        /** Parses all lines as points in `i,j` notation. */
+        lij(): Point[];
         /** Makes a grid of characters in this string. */
         grid(): Grid<string>;
         /** Splits this string on any whitespace. */

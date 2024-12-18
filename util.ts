@@ -242,6 +242,14 @@ String.prototype.lines = function () {
   return this.split("\n")
 }
 
+String.prototype.lxy = function () {
+  return this.lines().map((x) => x.xy())
+}
+
+String.prototype.lij = function () {
+  return this.lines().map((x) => x.ij())
+}
+
 String.prototype.grid = function () {
   return new Grid(this.lines().map((x) => x.chars())) as Grid<string>
 }
@@ -2218,6 +2226,10 @@ declare global {
     chars(): string[]
     /** Splits this string on every newline. */
     lines(): string[]
+    /** Parses all lines as points in `x,y` notation. */
+    lxy(): Point[]
+    /** Parses all lines as points in `i,j` notation. */
+    lij(): Point[]
     /** Makes a grid of characters in this string. */
     grid(): Grid<string>
     /** Splits this string on any whitespace. */

@@ -192,6 +192,12 @@ String.prototype.chars = function () {
 String.prototype.lines = function () {
     return this.split("\n");
 };
+String.prototype.lxy = function () {
+    return this.lines().map((x) => x.xy());
+};
+String.prototype.lij = function () {
+    return this.lines().map((x) => x.ij());
+};
 String.prototype.grid = function () {
     return new Grid(this.lines().map((x) => x.chars()));
 };
