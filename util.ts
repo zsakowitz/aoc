@@ -1277,12 +1277,12 @@ class Point<T = unknown> {
     return new Point(this.x, this.y, this.z, grid)
   }
 
-  addIn(set: PointSet<T>) {
+  addTo(set: PointSet<T>) {
     set.add(this)
     return this
   }
 
-  delIn(set: PointSet<T>) {
+  delFrom(set: PointSet<T>) {
     set.del(this)
     return this
   }

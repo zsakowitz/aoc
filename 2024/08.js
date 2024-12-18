@@ -11,10 +11,10 @@ function go(/** @type {string} */ input, /** @type {1|2} */ part) {
       for (const [a, b] of g.k().f(char).arr().c2()) {
         for (const [ax, bx] of [a, b].perms()) {
           if (part == 1) {
-            bx.add(bx, ax).xq()?.addIn(output)
+            bx.add(bx, ax).xq()?.addTo(output)
           } else {
             ints()
-              .mnn((n) => bx.add(bx.sub(ax).scale(n)).xq()?.addIn(output))
+              .mnn((n) => bx.add(bx.sub(ax).scale(n)).xq()?.addTo(output))
               .run()
           }
         }
