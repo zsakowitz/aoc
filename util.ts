@@ -178,6 +178,14 @@ Number.prototype.bits = function* (this: number) {
   }
 }
 
+Number.prototype.nf = function (this: number) {
+  return !Number.isFinite(this)
+}
+
+Number.prototype.f = function (this: number) {
+  return Number.isFinite(this)
+}
+
 BigInt.prototype.check = function (this: bigint, expected) {
   if (this !== expected) {
     throw new Error(
@@ -405,6 +413,16 @@ String.prototype.digitnamesrev = function (this: string) {
         .digitname()
         .m1(() => +x),
     )
+}
+
+String.prototype.xy = function (this: string) {
+  const [x, y] = this.split(",")
+  return new Point(+x!, +y!, undefined, undefined)
+}
+
+String.prototype.ij = function (this: string) {
+  const [i, j] = this.split(",")
+  return new Point(+j!, +i!, undefined, undefined)
 }
 
 Function.prototype.fnfilter = function (x, i) {
@@ -854,6 +872,14 @@ Boolean.prototype.s = function () {
   }
 }
 
+Boolean.prototype.z = function () {
+  if (this) {
+    return 1
+  } else {
+    return -1
+  }
+}
+
 function rangeTo(a: number, b: number) {
   if (b < a) {
     warn`range constructed with improperly ordered arguments`
@@ -1290,6 +1316,14 @@ class Point<T = unknown> {
   set v(v: T) {
     this.g!.set(this, v)
   }
+
+  xy(): string {
+    return this.x + "," + this.y
+  }
+
+  ij(): string {
+    return this.i + "," + this.j
+  }
 }
 
 class PointSet<T = unknown> {
@@ -1397,6 +1431,32 @@ globalThis.ij = Object.assign(
 ) as any
 
 class Grid<T> {
+  static of<T>(
+    f: Exclude<T, Function> | ((k: Point<T>) => T),
+    rows = 0,
+    cols = rows,
+  ): Grid<T> {
+    if (typeof f != "function") {
+      return new Grid(
+        Array.from({ length: rows }, () =>
+          Array.from<T>({ length: cols }).fill(f),
+        ),
+      )
+    }
+
+    const grid = new Grid<T>(
+      Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => null as any),
+      ),
+    )
+
+    for (const k of grid.k()) {
+      k.v = (f as any)(k)
+    }
+
+    return grid
+  }
+
   constructor(public rows: T[][]) {}
 
   indexOf(el: T) {
@@ -1553,9 +1613,7 @@ class Grid<T> {
   }
 }
 
-globalThis.Grid = function (rows = []) {
-  return new Grid(rows)
-} as any
+globalThis.Grid = Grid
 
 class Graph<T> {
   constructor(readonly v: GraphNode<T>[] = []) {}
@@ -2122,6 +2180,10 @@ declare global {
      * first.
      */
     bits(): Generator<boolean, never>
+    /** Shorthand for `!Number.isFinite(this)`. */
+    nf(): boolean
+    /** Shorthand for `Number.isFinite(this)`. */
+    f(): boolean
   }
 
   interface BigInt {
@@ -2230,6 +2292,10 @@ declare global {
      * `twone` becomes `[1]`.
      */
     digitnamesrev(): number[]
+    /** Parses this string as a point in `x,y` notation. */
+    xy(): Point
+    /** Parses this string as a point in `i,j` notation. */
+    ij(): Point
   }
 
   interface Function {
@@ -2366,16 +2432,12 @@ declare global {
      * If this is an array of `[x,y]` tuples, returns an iterator over points
      * representing those `(x,y)` pairs.
      */
-    xy(
-      this: IteratorObject<[x: number, y: number], any, any>,
-    ): IteratorObject<Point, any, any>
+    xy(this: [x: number, y: number][]): Point[]
     /**
      * If this is an array of `[i][j]` tuples, returns an iterator over points
      * representing those pairs.
      */
-    ij(
-      this: IteratorObject<[i: number, j: number], any, any>,
-    ): IteratorObject<Point, any, any>
+    ij(this: [i: number, j: number][]): Point[]
     /** Returns `true` if all elements match `f`. */
     all(f: FnFilter<T>): boolean
     /** Returns `true` if for some `f` of `fs`, all elements match `f`. */
@@ -2501,10 +2563,15 @@ declare global {
     /** Returns `this`. */
     c(): boolean
     /**
-     * Returns `-1` if `false`. Otherwise, `1`. Useful for custom sorting
+     * Returns `-1` if `true`. Otherwise, `1`. Useful for custom sorting
      * functions, as in `.sort((a, b) => (a < b).s())`.
      */
     s(): -1 | 1
+    /**
+     * Returns `1` if `true`. Otherwise, `-1`. Useful for custom sorting
+     * functions, as in `.sort((a, b) => (a > b).s())`.
+     */
+    z(): -1 | 1
   }
 
   /** Creates an inclusive range `0..=max`. */
@@ -2569,10 +2636,7 @@ declare global {
   type Point<T = unknown> = __Point<T>
 
   /** Creates a grid. */
-  var Grid: typeof __Grid & {
-    <T>(rows?: T[][]): Grid<T>
-    new <T>(rows?: T[][]): Grid<T>
-  }
+  var Grid: typeof __Grid
   /** A grid. */
   type Grid<T> = __Grid<T>
 

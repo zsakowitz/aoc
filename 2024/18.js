@@ -2,20 +2,13 @@ import "../util.js"
 
 const i = input(2024, 18)
   .lines()
-  .map((x) => x.split(",").int())
+  .map((x) => x.xy())
 
 function go(/** @type {number} */ limit) {
-  const g = new Grid(
-    Array(71)
-      .fill(0)
-      .map(() =>
-        Array(71)
-          .fill(0)
-          .map(() => true),
-      ),
-  )
+  const g = Grid.of(true, 71)
+
   for (const p of i.slice(0, limit)) {
-    g.rows[p[1]][p[0]] = false
+    g.set(p, false)
   }
 
   const gr = new Graph()
@@ -35,5 +28,5 @@ function go(/** @type {number} */ limit) {
 
 go(1024).check(372) // p1
 
-const idx = rx(i.length).search((n) => (go(n) == Infinity ? 1 : -1))
-i[idx].join(",").check("25,6", "YESIMSURE") // p2
+const idx = rx(i.length).search((n) => go(n).f().s())
+i[idx].xy().check("25,6", "YESIMSURE") // p2

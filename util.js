@@ -142,6 +142,12 @@ Number.prototype.bits = function* () {
         n >>= 1;
     }
 };
+Number.prototype.nf = function () {
+    return !Number.isFinite(this);
+};
+Number.prototype.f = function () {
+    return Number.isFinite(this);
+};
 BigInt.prototype.check = function (expected) {
     if (this !== expected) {
         throw new Error(`${colors.red}FAILED: expected ${expected} but got ${this}${colors.reset}`);
@@ -318,6 +324,14 @@ String.prototype.digitnamesrev = function () {
         .reverse()
         .digitname()
         .m1(() => +x));
+};
+String.prototype.xy = function () {
+    const [x, y] = this.split(",");
+    return new Point(+x, +y, undefined, undefined);
+};
+String.prototype.ij = function () {
+    const [i, j] = this.split(",");
+    return new Point(+j, +i, undefined, undefined);
 };
 Function.prototype.fnfilter = function (x, i) {
     return this(x, i);
@@ -704,6 +718,14 @@ Boolean.prototype.s = function () {
         return 1;
     }
 };
+Boolean.prototype.z = function () {
+    if (this) {
+        return 1;
+    }
+    else {
+        return -1;
+    }
+};
 function rangeTo(a, b) {
     if (b < a) {
         warn `range constructed with improperly ordered arguments`;
@@ -1045,6 +1067,12 @@ class Point {
     set v(v) {
         this.g.set(this, v);
     }
+    xy() {
+        return this.x + "," + this.y;
+    }
+    ij() {
+        return this.i + "," + this.j;
+    }
 }
 class PointSet {
     pts = new Map();
@@ -1119,6 +1147,16 @@ globalThis.ij = Object.assign(function ij(i, j, ...args) {
 }, { ring: Point.ring });
 class Grid {
     rows;
+    static of(f, rows = 0, cols = rows) {
+        if (typeof f != "function") {
+            return new Grid(Array.from({ length: rows }, () => Array.from({ length: cols }).fill(f)));
+        }
+        const grid = new Grid(Array.from({ length: rows }, () => Array.from({ length: cols }, () => null)));
+        for (const k of grid.k()) {
+            k.v = f(k);
+        }
+        return grid;
+    }
     constructor(rows) {
         this.rows = rows;
     }
@@ -1260,9 +1298,7 @@ class Grid {
         document.body.append(el);
     }
 }
-globalThis.Grid = function (rows = []) {
-    return new Grid(rows);
-};
+globalThis.Grid = Grid;
 class Graph {
     v;
     constructor(v = []) {

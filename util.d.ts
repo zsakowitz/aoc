@@ -73,6 +73,8 @@ declare class Point<T = unknown> {
     idxbrbrbr(): number;
     get v(): T | X;
     set v(v: T);
+    xy(): string;
+    ij(): string;
 }
 declare class PointSet<T = unknown> {
     pts: Map<string, Point<T>>;
@@ -93,6 +95,7 @@ declare class PointSet<T = unknown> {
 }
 declare class Grid<T> {
     rows: T[][];
+    static of<T>(f: Exclude<T, Function> | ((k: Point<T>) => T), rows?: number, cols?: number): Grid<T>;
     constructor(rows: T[][]);
     indexOf(el: T): Point<T> | X;
     i(el: T): Point<T> | undefined;
@@ -288,6 +291,10 @@ declare global {
          * first.
          */
         bits(): Generator<boolean, never>;
+        /** Shorthand for `!Number.isFinite(this)`. */
+        nf(): boolean;
+        /** Shorthand for `Number.isFinite(this)`. */
+        f(): boolean;
     }
     interface BigInt {
         /** Checks this bigint against an expected value, throwing on error. */
@@ -391,6 +398,10 @@ declare global {
          * `twone` becomes `[1]`.
          */
         digitnamesrev(): number[];
+        /** Parses this string as a point in `x,y` notation. */
+        xy(): Point;
+        /** Parses this string as a point in `i,j` notation. */
+        ij(): Point;
     }
     interface Function {
         /** Calls `this` with the provided arguments. */
@@ -520,12 +531,12 @@ declare global {
          * If this is an array of `[x,y]` tuples, returns an iterator over points
          * representing those `(x,y)` pairs.
          */
-        xy(this: IteratorObject<[x: number, y: number], any, any>): IteratorObject<Point, any, any>;
+        xy(this: [x: number, y: number][]): Point[];
         /**
          * If this is an array of `[i][j]` tuples, returns an iterator over points
          * representing those pairs.
          */
-        ij(this: IteratorObject<[i: number, j: number], any, any>): IteratorObject<Point, any, any>;
+        ij(this: [i: number, j: number][]): Point[];
         /** Returns `true` if all elements match `f`. */
         all(f: FnFilter<T>): boolean;
         /** Returns `true` if for some `f` of `fs`, all elements match `f`. */
@@ -639,10 +650,15 @@ declare global {
         /** Returns `this`. */
         c(): boolean;
         /**
-         * Returns `-1` if `false`. Otherwise, `1`. Useful for custom sorting
+         * Returns `-1` if `true`. Otherwise, `1`. Useful for custom sorting
          * functions, as in `.sort((a, b) => (a < b).s())`.
          */
         s(): -1 | 1;
+        /**
+         * Returns `1` if `true`. Otherwise, `-1`. Useful for custom sorting
+         * functions, as in `.sort((a, b) => (a > b).s())`.
+         */
+        z(): -1 | 1;
     }
     /** Creates an inclusive range `0..=max`. */
     function ri(max: number, _?: undefined): Range;
@@ -693,10 +709,7 @@ declare global {
     /** A point. */
     type Point<T = unknown> = __Point<T>;
     /** Creates a grid. */
-    var Grid: typeof __Grid & {
-        <T>(rows?: T[][]): Grid<T>;
-        new <T>(rows?: T[][]): Grid<T>;
-    };
+    var Grid: typeof __Grid;
     /** A grid. */
     type Grid<T> = __Grid<T>;
     /** A directed graph. */
